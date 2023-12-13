@@ -4,6 +4,17 @@
 # Define the input and output files
 K = 9 # Define k length
 
+#Rule checks if output file is already there, if is do not run rule generate_kmers
+rule check_kmer_profiles:
+    output:
+        "kmer9_profiles.tsv"
+    run:
+        if not os.path.isfile("kmer9_profiles.tsv"):
+            open("kmer9_profiles.tsv", "w").close()
+        # Create the tmp directory if it doesn't exist
+        if not os.path.isdir("tmp"):
+            os.mkdir("tmp")
+
 # Rule to generate k-mer counts using Gerbil
 rule generate_kmers:
 	input:
@@ -24,16 +35,22 @@ rule generate_kmers:
 	
       	  	ls -lh output/*kmer{params.k}.txt | sed 's/  */\t/g' | cut -f9 | sed 's/output\///g' | sed 's/_kmer{params.k}.txt//g' > list_kmer{params.k}_files.txt
 		
-		#Create tmp folder
-		if [ ! -d tmp ]; then
-       	 		mkdir tmp
-		fi
-
 		#Run scripts to convert Gerbil output formats
 		python3 scripts/d_make_kmer_table.py list_kmer{params.k}_files.txt tmp
-        	#rm tmp/*
-        	#rmdir tmp
+
         	"""
 
-
+rule append_agg_kmer_tables:
+    input:
+        "list_kmer{params.k}_files.txt",
+        "output/{sample}_kmer{params.k}.txt"
+    output:
+        "output/kmer9_profiles.tsv"
+    shell:
+        r"""
+        python3 scripts/d_append_agg_kmer_tables.py list_kmer{params.k}_files.txt output
+	rm output/*_kmer9.txt
+	rm tmp/*
+        rmdir tmp
+        """
 
