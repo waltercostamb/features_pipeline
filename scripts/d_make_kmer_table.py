@@ -2,7 +2,7 @@
 
 #Developer: Rose Brouns, modified by MB Walter Costa
 '''Makes from the fasta outputs with kmers counts from gerbil a table per sample
-USAGE : d_make_kmer_table.py input_file output_path'''
+USAGE: SCRIPT input_file output_path'''
 #input_file contains a list of IDs one per line and output path is a temporary folder
 
 ### HOUSEKEEPING

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
-'''Makes one table of all the kmer tables
-USAGE : /1_scripts/2_CompareKmers/ [1] input_file [2] output_path  '''
+#Developer: Rose Brouns, modified by MB Walter Costa
+'''Makes one table of all the kmer tables created with d_make_kmer_table.py
+USAGE: SCRIPT input_file output_path'''
+#input_file contains a list of IDs one per line and output path is a temporary folder
 
 ### HOUSEKEEPING
 
@@ -10,19 +12,18 @@ import sys
 import os
 
 ### FUNCTION
-
-def merge_kmer_profile(kmer_tables_list):
+def merge_kmer_profile(file_ids):
     '''
-    Takes a list with the file paths as input and merges the tables into one dataframe.
+    Takes a list with the file ids as input and merge tables into dataframe.
     If a kmer is found duplicated, the merging went wrong 
-    and the option to stop adding more tables is there.
+    and the option to stop adding more tables is set.
     '''
     dfs = []  # List to hold dataframes before merging
 
-    # Load and preprocess each table
-    for file_name in kmer_tables_list:
+    # Load and pre-process each table
+    for file_name in file_ids:
         try:
-            table = pd.read_csv(f'{file_name}', sep='\t', index_col=0)
+            table = pd.read_csv(f'tmp/{file_name}_kmer{k}.tsv', sep='\t', index_col=0)
             table = table[~table.index.duplicated(keep='first')]
             dfs.append(table)
         except:
@@ -42,40 +43,33 @@ if __name__ == '__main__':
 
     ### INPUT & OUTPUT
 
-    # input_file = '/home/ro35nam/0_data/2_CompareKmers/test_fastQ/gerbil_output/ERR2356284_MERGED_FASTQ.fasta.gz_k{9}.out'
-    # input_folder = '/work/groups/VEO/shared_data/rose/salinity/kmer_tables'
-    # input_folder = '/Users/roosbrouns/Library/CloudStorage/OneDrive-Friedrich-Schiller-UniversitätJena/Projects/CompareTaxa/0_data/2_Compar
-    # input_folder = sys.argv[1]
-    file_w_paths = sys.argv[1]
-    chunk_name = '_'.join(file_w_paths.split('/')[-1].split('_')[-2:])
-
-    # output_path = '/Users/roosbrouns/Library/CloudStorage/OneDrive-Friedrich-Schiller-UniversitätJena/Projects/CompareTaxa/0_data/2_CompareKmers/k-mers_test'
-    # output_path = '/work/groups/VEO/shared_data/rose/salinity'
+    # input_file is something like: list_kmer9_files.txt    
+    input_file = sys.argv[1]
+    k = input_file.split('_')[1].strip('kmer')
+    #output_path should be output/
     output_path = sys.argv[2]
     
-
     ### RUN
 
-    # kmer_tables = os.listdir(input_folder)
+    # Read the file_ids from the file
+    with open(input_file, 'r') as file:
+        file_ids = file.readlines()
 
-    with open(file_w_paths, "r") as file:
-        kmer_tables = [line.strip() for line in file]
-
-    # Create empty the DataFrame
+    # Strip newline characters and remove empty lines
+    file_ids = [line.strip() for line in file_ids if line.strip()]
+    
+    # Create empty DataFrame
     df = pd.DataFrame()
 
-    df_merged = merge_kmer_profile(kmer_tables)
-
+    df_merged = merge_kmer_profile(file_ids)
+    
     # Check for duplicates
     if sum(df_merged.index.duplicated(keep=False)) > 0:
         print(f'> duplicates found in {chunk_name}')
-    else:
-        pass
 
     # Replace NaN by 0
     df_merged.fillna(0, inplace=True)
+    df_merged = df_merged.apply(pd.to_numeric).astype(int)
 
     # Save to file with run-id
-    df_merged.to_csv(f'{output_path}/kmer9_profiles_{chunk_name}.tsv', sep='\t')
-    # df_filtered.to_csv(f'{output_path}/kmer9_profiles_{threshold}_{chunk_name}-filtered.tsv', sep='\t', index=False)
-
+    df_merged.to_csv(f'{output_path}/kmer{k}_profiles.tsv', sep='\t')
