@@ -13,5 +13,7 @@ rule generate_kmers:
 	params:
 		k=K
 	shell:
-		"/home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -e 30GB -t 10 -k {K} -l 1 -o fasta {input.genome} temp {output.kmers}"
-
+		r"""
+		/home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -e 30GB -t 10 -k {K} -l 1 -o fasta {input.genome} temp {output.kmers}
+		ls -lh output/*kmer{K}.txt | sed 's/  */\t/g' | cut -f9 | sed 's/output\///g' | sed 's/_kmer{K}.txt//g' > list_kmer{K}_files.txt
+		"""
