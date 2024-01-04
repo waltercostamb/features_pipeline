@@ -34,6 +34,7 @@ rule kmers:
 		python3 scripts/d_make_kmer_table.py list_kmer{params.k}_files.txt tmp
 		python3 scripts/d_append_agg_kmer_tables.py list_kmer{params.k}_files.txt output
 
+
 #TODO: remove intermediary files
 #		rm output/*_kmer{params.k}.txt
 #		rm -r tmp/
@@ -43,12 +44,35 @@ rule kmers:
 #Output of checkm DIRECTORY/bins/CAADIS000000000/genes.faa
 #source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh && conda activate eggnog-mapper_v2.1.11
 #Rule to annotate genes and assign orthologies
+#rule genes:
+#	input:
+#		genome="input/{sample}.fasta"
+#	output:
+#		checkm="output/bins/{sample}/genes.faa", 
+#		lineage="output/bins/{sample}",
+##	conda:
+##		"checkm_v1.2.2.yaml"
+##		"checkm_v1.2.2"
+#	shell:
+#		r"""
+#		bash -c '
+#            	. $HOME/.bashrc # if not loaded automatically
+#		conda init bash
+
+#		#Activate conda environment
+#		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
+#            	conda activate checkm_v1.2.2
+###        	if [ -f {output.checkm} ]; then
+#		checkm lineage_wf -t 40 -x fasta {input.genome} output
+###		fi
+##		checkm qa -o 2 -f {output.lineage}/*_qa.txt {output.lineage}/lineage.ms {output.lineage}
+#		"""
+	
 rule gene_families:
 	input:
-		genome="input"
+		checkm="output/bins/{sample}/genes.faa"
 	output:
-		checkm="output/bins/{sample}/genes.faa", 
-		lineage="output/bins/{sample}"
+		emapper="output/proteins_emapper/{sample}"
 #	conda:
 #		"checkm_v1.2.2.yaml"
 #		"checkm_v1.2.2"
@@ -57,16 +81,15 @@ rule gene_families:
 		bash -c '
             	. $HOME/.bashrc # if not loaded automatically
 		conda init bash
-		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
-            	conda activate checkm_v1.2.2
-#        	if [ -f {output.checkm} ]; then
-		checkm lineage_wf -t 40 -x fasta {input.genome} output
-#		fi
-		checkm qa -o 2 -f {output.lineage}/*_qa.txt {output.lineage}/lineage.ms {output.lineage}
-            	conda deactivate'
+		source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
+		conda activate eggnog-mapper_v2.1.11
 
-		#conda activate eggnog-mapper_v2.1.11
 
+		mkdir output/proteins_emapper
+	
+		#Run eggnog emapper
+		emapper.py --cpu 40 --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.sample} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue 0.0001 --go_evidence non-electronic --tax_scope auto --target_orthologs all
+		'
 		"""
 
 
