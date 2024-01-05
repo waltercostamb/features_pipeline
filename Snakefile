@@ -63,7 +63,8 @@ rule kmers:
 #		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
 #            	conda activate checkm_v1.2.2
 ###        	if [ -f {output.checkm} ]; then
-#		checkm lineage_wf -t 40 -x fasta {input.genome} output
+##		WARNING: do not change t to more than 20 (see wiki)
+#		checkm lineage_wf -t 20 -x fasta {input.genome} output
 ###		fi
 ##		checkm qa -o 2 -f {output.lineage}/*_qa.txt {output.lineage}/lineage.ms {output.lineage}
 #		"""
@@ -88,7 +89,7 @@ rule gene_families:
 		mkdir output/proteins_emapper
 	
 		#Run eggnog emapper
-		emapper.py --cpu 40 --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.sample} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue 0.0001 --go_evidence non-electronic --tax_scope auto --target_orthologs all
+		emapper.py --cpu 40 --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.sample} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue 0.0001 --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size 2.0
 		'
 		"""
 
