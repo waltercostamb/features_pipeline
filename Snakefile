@@ -40,34 +40,35 @@ rule kmers:
 #		rm -r tmp/
         	"""
 
-#source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate checkm_v1.2.2 
 #Output of checkm DIRECTORY/bins/CAADIS000000000/genes.faa
-#source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh && conda activate eggnog-mapper_v2.1.11
-#Rule to annotate genes and assign orthologies
-#rule genes:
-#	input:
-#		genome="input/{sample}.fasta"
-#	output:
-#		checkm="output/bins/{sample}/genes.faa", 
-#		lineage="output/bins/{sample}",
+#WARNING: do not change t to more than 20 (see wiki)
+#To run this rule for one file: snakemake --use-conda --conda-frontend conda --cores 1 output/bins/1266999/genes.faa
+#Rule to annotate genes 
+rule genes:
+	input:
+		genomes="input"
+	output:
+		checkm="output/bins/{sample}/genes.faa", 
+		lineage=directory("output/bins/{sample}"),
+		qa="output/bins/{sample}/{sample}_qa.txt"
 ##	conda:
 ##		"checkm_v1.2.2.yaml"
 ##		"checkm_v1.2.2"
-#	shell:
-#		r"""
-#		bash -c '
-#            	. $HOME/.bashrc # if not loaded automatically
-#		conda init bash
+	shell:
+		r"""
+		bash -c '
+            	. $HOME/.bashrc # if not loaded automatically
+		conda init bash
 
-#		#Activate conda environment
-#		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
-#            	conda activate checkm_v1.2.2
-###        	if [ -f {output.checkm} ]; then
-##		WARNING: do not change t to more than 20 (see wiki)
-#		checkm lineage_wf -t 20 -x fasta {input.genome} output
-###		fi
-##		checkm qa -o 2 -f {output.lineage}/*_qa.txt {output.lineage}/lineage.ms {output.lineage}
-#		"""
+		#Activate conda environment
+		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
+            	conda activate checkm_v1.2.2
+
+#		CheckM takes a list of Fasta files from the input folder ({input.genomes})
+		checkm lineage_wf -t 20 -x fasta {input.genomes} output
+		checkm qa -o 2 -f {output.qa} output/lineage.ms output
+		'
+		"""
 	
 rule gene_families:
 	input:
@@ -85,8 +86,7 @@ rule gene_families:
 		source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
 		conda activate eggnog-mapper_v2.1.11
 
-
-		mkdir output/proteins_emapper
+		mkdir output/proteins_emapper/{wildcards.sample}
 	
 		#Run eggnog emapper
 		emapper.py --cpu 40 --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.sample} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue 0.0001 --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size 2.0
