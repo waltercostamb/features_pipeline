@@ -34,16 +34,16 @@ rule kmers:
 		python3 scripts/d_make_kmer_table.py list_kmer{params.k}_files.txt tmp
 		python3 scripts/d_append_agg_kmer_tables.py list_kmer{params.k}_files.txt output
 
-
 #TODO: remove intermediary files
 #		rm output/*_kmer{params.k}.txt
 #		rm -r tmp/
+#		list_kmer{params.k}_files.txt
         	"""
 
 #Output of checkm DIRECTORY/bins/CAADIS000000000/genes.faa
 #WARNING: do not change t to more than 20 (see wiki)
 #To run this rule for one file: snakemake --use-conda --conda-frontend conda --cores 1 output/bins/1266999/genes.faa
-#Rule to annotate genes 
+#Rule to annotate genes (runs checkM lineage_wf and checkm qa)
 rule genes:
 	input:
 		genomes="input"
@@ -74,14 +74,14 @@ rule gene_families:
 	input:
 		checkm="output/bins/{sample}/genes.faa"
 	output:
-		emapper="output/proteins_emapper/{sample}"
+		emapper=directory("output/proteins_emapper/{sample}")
 #	conda:
 #		"checkm_v1.2.2.yaml"
 #		"checkm_v1.2.2"
 	shell:
 		r"""
 		bash -c '
-            	. $HOME/.bashrc # if not loaded automatically
+            	. $HOME/.bashrc 
 		conda init bash
 		source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
 		conda activate eggnog-mapper_v2.1.11
@@ -89,9 +89,21 @@ rule gene_families:
 		mkdir output/proteins_emapper/{wildcards.sample}
 	
 		#Run eggnog emapper
-		emapper.py --cpu 40 --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.sample} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue 0.0001 --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size 2.0
+		emapper.py --cpu 40 --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.sample} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue 0.0001 --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size 10.0
 		'
 		"""
 
+rule pfam:
+	input:
+		checkm="output/bins/{sample}/genes.faa"
+	output:
+		?
+	shell:
+		r"""
+		#Run HMMER
+		/home/groups/VEO/tools/hmmer/v3.3.1/bin/hmmsearch input.checkm DB_PATH	
+		"""
+
+rule dram:
 
 
