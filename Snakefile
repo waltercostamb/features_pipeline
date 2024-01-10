@@ -1,8 +1,20 @@
 #Developer: Maria Beatriz Walter Costa, waltercostamb@gmail.com
 #This pipeline extracts diverse features from bacterial genomes.
 
-# Define the input and output files
-K = 9 # Define k length
+import json
+
+# Read variables from the config.json file
+with open('config.json', 'r') as config_file:
+    config_data = json.load(config_file)
+
+# Access the variables from the loaded JSON data
+K_value = int(config_data["K"])
+
+# Use the K_value variable in your rules
+K = K_value  # Set K to the value read from config.json
+
+## Define the input and output files
+#K = 9 # Define k length
 
 #Rule to generate k-mer counts using Gerbil and formatting the output
 rule kmers:
@@ -16,7 +28,7 @@ rule kmers:
 	shell:
 		r"""
 		#Gerbil
-	        /home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -e 30GB -t 10 -k {params.k} -l 1 -o fasta {input.genome} temp {output.kmers}
+	        /home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -t 10 -k {params.k} -l 1 -o fasta {input.genome} temp {output.kmers}
 
 		#Create list of files
         	if [ -f list_kmer{params.k}_files.txt ]; then
@@ -34,7 +46,7 @@ rule kmers:
 		python3 scripts/d_make_kmer_table.py list_kmer{params.k}_files.txt tmp
 		python3 scripts/d_append_agg_kmer_tables.py list_kmer{params.k}_files.txt output
 
-#TODO: remove intermediary files
+#TODO: remove intermediary filellls
 #		rm output/*_kmer{params.k}.txt
 #		rm -r tmp/
 #		list_kmer{params.k}_files.txt
@@ -44,7 +56,7 @@ rule kmers:
 #WARNING: do not change t to more than 20 (see wiki)
 #To run this rule for one file: snakemake --use-conda --conda-frontend conda --cores 1 output/bins/1266999/genes.faa
 #Rule to annotate genes (runs checkM lineage_wf and checkm qa)
-rule genes:
+rule genes_checkm:
 	input:
 		genomes="input"
 	output:
@@ -70,7 +82,7 @@ rule genes:
 		'
 		"""
 	
-rule gene_families:
+rule gene_families_emapper:
 	input:
 		checkm="output/bins/{sample}/genes.faa"
 	output:
@@ -92,18 +104,42 @@ rule gene_families:
 		emapper.py --cpu 40 --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.sample} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue 0.0001 --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size 10.0
 		'
 		"""
-
-rule pfam:
+rule gene_families_table:
 	input:
-		checkm="output/bins/{sample}/genes.faa"
+		emapper="output/proteins_emapper/"
 	output:
-		?
+		gene_table="output/gene-family_profiles.csv"
+#	conda:
+#		"checkm_v1.2.2.yaml"
+#		"checkm_v1.2.2"
 	shell:
 		r"""
-		#Run HMMER
-		/home/groups/VEO/tools/hmmer/v3.3.1/bin/hmmsearch input.checkm DB_PATH	
+		bash -c '
+            	. $HOME/.bashrc 
+		conda activate bacterial_phenotypes
+
+		ls -lh {input.emapper}/*/*annotations > pre_file_list.txt
+		sed "s/  */\t/g" pre_file_list.txt | cut -f 9 | sed "s/\//\t/g" | cut -f3 > file_list.txt
+
+		#Run script to make a table out of the emapper output from rule gene_families_emapper
+		python3 scripts/genes_table.py file_list.txt output/proteins_emapper/ output/
+		rm pre_file_list.txt
+		rm file_list.txt
+		'
 		"""
 
-rule dram:
+
+#rule pfam:
+#	input:
+#		checkm="output/bins/{sample}/genes.faa"
+#	output:
+#		?
+#	shell:
+#		r"""
+#		#Run HMMER
+#		/home/groups/VEO/tools/hmmer/v3.3.1/bin/hmmsearch input.checkm DB_PATH	
+#		"""
+
+#rule dram:
 
 
