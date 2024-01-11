@@ -7,12 +7,17 @@ According to https://snakemake.readthedocs.io/en/latest/tutorial/tutorial.html#t
 Using Snakemake:  
 
 - Submit an sbatch file to slurm, as if the Snakefile would be a usual script
+
+```
+sbatch snakefile.sbatch 
+```
+
 - Allocate a node and run Snakemake directly in the command line, as below. Importantly, some of the software used within Snakefile do not run in the standard node. They require more memory. Therefore, use it in a gpu or fat node.
 
 ```
-#Allocate a node
+#Allocate a node: gpu or fat
 salloc -p gpu --gres=gpu:1 
-salloc -p gpu -w gpu005
+salloc -p fat -N 1
 
 #Activate Snakemake
 source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate snakemake_v7.24.0
@@ -23,7 +28,21 @@ snakemake --use-conda --cores 1
 
 To make sure the desired feature is activated in the Snakefile: open Snakefile, uncomment the command line(s) referring to the desired feature, comment the other command lines.
 
-Available features:  
+# Example
+
+As an example on how to run the pipeline, use the files given as input and the config.file. Run it in an allocated node:
+
+```
+snakemake --use-conda --cores 1
+```
+
+or submit it to the slurm queue:
+
+```
+sbatch snakefile.sbatch 
+```
+
+# Available features:  
 
 - kmers
 

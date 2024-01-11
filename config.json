@@ -1,0 +1,9 @@
+{
+    "genomes": "genomes.txt",
+    "K": 9,
+    "threads_gerbil": 40,
+    "threads_checkm": 40,
+    "threads_emapper": 40,
+    "emapper_seed_ortholog_evalue": 0.0001,
+    "emapper_block_size": 10.0
+}
