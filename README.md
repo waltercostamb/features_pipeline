@@ -16,43 +16,38 @@ salloc -p gpu -w gpu005
 
 #Activate Snakemake
 source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate snakemake_v7.24.0
+
+#Run snakemake. Obs: make sure the feature you want is activated in the Snakfile
+snakemake --use-conda --cores 1
 ```
 
-Available features and usage:  
+To make sure the desired feature is activated in the Snakefile: open Snakefile, uncomment the command line(s) referring to the desired feature, comment the other command lines.
+
+Available features:  
 
 - kmers
 
-```
-
-```
+kmers are sub-sequences of a genome. Kmers have length k, which can be defined by the user. The default is 9. If you want a different k, change it in file config.json. Kmers are calculated with Gerbil. An in-house script creates a table with kmers per file ID. 
+ 
 
 - Gene families
 
-```
-
-```
+Genes are first predicted with CheckM (which uses prodigal internally) from the bacterial genomes. Afterwards, families are assigned with eggnog emapper. Finally, an in-house script creates a table with gene families per file ID: 1 symbols the presence of that family in the file ID, while 0 symbols absence. 
 
 - GC content
 
-```
-
-```
+Is calculated by CheckM. To obtain it activate the rule for gene families.
 
 - Genome size (nt)
 
-```
-
-```
+Is calculated by CheckM. To obtain it activate the rule for gene families.
 
 - Genome completeness
 
-```
-
-```
+Is calculated by CheckM. To obtain it activate the rule for gene families.
 
 - Pfam domains 
- 
-```
 
-```
+Is calculated by CheckM. To obtain it activate the rule for gene families.
+
 
