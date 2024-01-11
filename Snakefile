@@ -3,32 +3,52 @@
 
 import json
 
-# Read variables from the config.json file
+#Read variables from config.json file
 with open('config.json', 'r') as config_file:
     config_data = json.load(config_file)
 
-# Access the variables from the loaded JSON data
-K_value = int(config_data["K"])
+#Store variables from the loaded JSON data
+genomes = config_data["genomes"]
+K = int(config_data["K"])
+threads_gerbil = int(config_data["threads_gerbil"])
+threads_checkm = int(config_data["threads_checkm"])
+threads_emapper = int(config_data["threads_emapper"])
+emapper_seed_ortholog_evalue = int(config_data["emapper_seed_ortholog_evalue"])
+emapper_block_size = int(config_data["emapper_block_size"])
 
-# Use the K_value variable in your rules
-K = K_value  # Set K to the value read from config.json
+#Read the list of genome files
+genomeID_lst = []
+fh_in = open(genomes, 'r')
+for line in fh_in:
+    line = line.rstrip()
+    genomeID_lst.append(line)
 
-## Define the input and output files
-#K = 9 # Define k length
+#This rule is the default target rule. If you call snakemake with the command 
+#below, it will produce the files specified in it
+#snakemake --use-conda --cores 1
+rule all:
+	input: 
+		#kmers
+		expand("output/{id}_kmer{K}.txt", id=genomeID_lst, K=K),
+		#genes_checkm
+		expand("output/bins/{id}/genes.faa", id=genomeID_lst),
+		#gene_families_emapper
+		expand("output/proteins_emapper/{id}", id=genomeID_lst)
+
 
 #Rule to generate k-mer counts using Gerbil and formatting the output
 rule kmers:
 	input:
-		genome="input/{sample}.fasta"
+		genome="input/{id}.fasta"
 	output:
-		kmers="output/{sample}_kmer{K}.txt"
+		kmers="output/{id}_kmer{K}.txt"
 	params:
 		k=K,
-	threads: 10
+		t=threads_gerbil
 	shell:
 		r"""
 		#Gerbil
-	        /home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -t 10 -k {params.k} -l 1 -o fasta {input.genome} temp {output.kmers}
+	        /home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -t {params.t} -k {params.k} -l 1 -o fasta {input.genome} temp {output.kmers}
 
 		#Create list of files
         	if [ -f list_kmer{params.k}_files.txt ]; then
@@ -60,9 +80,11 @@ rule genes_checkm:
 	input:
 		genomes="input"
 	output:
-		checkm="output/bins/{sample}/genes.faa", 
-		lineage=directory("output/bins/{sample}"),
-		qa="output/bins/{sample}/{sample}_qa.txt"
+		checkm="output/bins/{id}/genes.faa", 
+		lineage=directory("output/bins/{id}"),
+		qa="output/bins/{id}/{id}_qa.txt"
+	params:
+		t=threads_checkm
 ##	conda:
 ##		"checkm_v1.2.2.yaml"
 ##		"checkm_v1.2.2"
@@ -77,16 +99,20 @@ rule genes_checkm:
             	conda activate checkm_v1.2.2
 
 #		CheckM takes a list of Fasta files from the input folder ({input.genomes})
-		checkm lineage_wf -t 20 -x fasta {input.genomes} output
+		checkm lineage_wf -t {params.t} -x fasta {input.genomes} output
 		checkm qa -o 2 -f {output.qa} output/lineage.ms output
 		'
 		"""
 	
 rule gene_families_emapper:
 	input:
-		checkm="output/bins/{sample}/genes.faa"
+		checkm="output/bins/{id}/genes.faa"
 	output:
-		emapper=directory("output/proteins_emapper/{sample}")
+		emapper=directory("output/proteins_emapper/{id}")
+	params:
+		t=threads_emapper,
+		e=emapper_seed_ortholog_evalue,
+		b=emapper_block_size
 #	conda:
 #		"checkm_v1.2.2.yaml"
 #		"checkm_v1.2.2"
@@ -98,12 +124,26 @@ rule gene_families_emapper:
 		source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
 		conda activate eggnog-mapper_v2.1.11
 
-		mkdir output/proteins_emapper/{wildcards.sample}
+		mkdir output/proteins_emapper/{wildcards.id}
 	
 		#Run eggnog emapper
-		emapper.py --cpu 40 --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.sample} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue 0.0001 --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size 10.0
+		emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
+
+		#Deactivate emapper conda and activate python3
+		conda deactivate eggnog-mapper_v2.1.11
+                conda activate bacterial_phenotypes
+
+		ls -lh {output.emapper}/*/*annotations > pre_file_list.txt
+		sed "s/  */\t/g" pre_file_list.txt | cut -f 9 | sed "s/\//\t/g" | cut -f3 > file_list.txt
+
+		#Run script to make a table out of the emapper output from rule gene_families_emapper
+		python3 scripts/genes_table.py file_list.txt output/proteins_emapper/ output/
+		rm pre_file_list.txt
+		rm file_list.txt
 		'
 		"""
+
+#If above rules run fine, the below one is irrelevant
 rule gene_families_table:
 	input:
 		emapper="output/proteins_emapper/"
@@ -131,7 +171,7 @@ rule gene_families_table:
 
 #rule pfam:
 #	input:
-#		checkm="output/bins/{sample}/genes.faa"
+#		checkm="output/bins/{id}/genes.faa"
 #	output:
 #		?
 #	shell:
