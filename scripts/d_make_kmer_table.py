@@ -51,7 +51,7 @@ if __name__ == '__main__':
     for id in file_ids:
 
         # id is defined by Snakemake and has a strict format, e. g. CAADIQ000000000_kmer9.txt
-        full_id = 'output/' + id + '_kmer' + k + '.txt'
+        full_id = 'output/kmer_files/' + id + '_kmer' + k + '.txt'
         
         # Read the data from the id file
         with open(full_id, 'r') as file:

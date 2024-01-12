@@ -29,7 +29,7 @@ for line in fh_in:
 rule all:
 	input: 
 		#kmers
-		expand("output/{id}_kmer{K}.txt", id=genomeID_lst, K=K),
+		expand("output/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K),
 		#genes_checkm
 		expand("output/bins/{id}/genes.faa", id=genomeID_lst),
 		#gene_families_emapper
@@ -41,21 +41,22 @@ rule kmers:
 	input:
 		genome="input/{id}.fasta"
 	output:
-		kmers="output/{id}_kmer{K}.txt"
+		kmers="output/kmer_files/{id}_kmer{K}.txt"
 	params:
 		k=K,
 		t=threads_gerbil
 	shell:
 		r"""
+		#Create output folder of Gerbil's output files
+		if [ ! -d output/kmer_files ]; then 
+           		mkdir output/kmer_files
+		fi
+
 		#Gerbil
 	        /home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -t {params.t} -k {params.k} -l 1 -o fasta {input.genome} temp {output.kmers}
 
 		#Create list of files
-        	if [ -f list_kmer{params.k}_files.txt ]; then
-           		rm list_kmer{params.k}_files.txt
-      	  	fi
-	
-      	  	ls -lh output/*kmer{params.k}.txt | sed 's/  */\t/g' | cut -f9 | sed 's/output\///g' | sed 's/_kmer{params.k}.txt//g' > list_kmer{params.k}_files.txt
+      	  	ls -lh output/kmer_files/*kmer{params.k}.txt | sed 's/  */\t/g' | cut -f9 | sed 's/output\/kmer_files\///g' | sed 's/_kmer{params.k}.txt//g' > list_kmer{params.k}_files.txt
 		
 		#Create tmp folder
 		if [ ! -d tmp ]; then 
@@ -64,12 +65,11 @@ rule kmers:
 
 		#Run scripts to convert Gerbil output formats
 		python3 scripts/d_make_kmer_table.py list_kmer{params.k}_files.txt tmp
-		python3 scripts/d_append_agg_kmer_tables.py list_kmer{params.k}_files.txt output
+		python3 scripts/d_append_agg_kmer_tables.py list_kmer{params.k}_files.txt output/kmer_files
 
-#TODO: remove intermediary filellls
-#		rm output/*_kmer{params.k}.txt
-#		rm -r tmp/
-#		list_kmer{params.k}_files.txt
+		mv output/kmer_files/kmer{params.k}_profiles.tsv output/.
+		rm -r tmp/
+		rm list_kmer{params.k}_files.txt
         	"""
 
 #Output of checkm DIRECTORY/bins/CAADIS000000000/genes.faa
@@ -127,13 +127,17 @@ rule gene_families_emapper:
 		mkdir output/proteins_emapper/{wildcards.id}
 	
 		#Run eggnog emapper
-		emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
+#		emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
+
+		#Line below is an alternative to emapper for debugging purposes
+		cp -r proteins_emapper_backup/{wildcards.id} output/proteins_emapper/.
 
 		#Deactivate emapper conda and activate python3
-		conda deactivate eggnog-mapper_v2.1.11
-                conda activate bacterial_phenotypes
+		conda deactivate
+	        # Activate the default environment (base)
+		conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
 
-		ls -lh {output.emapper}/*/*annotations > pre_file_list.txt
+		ls -lh output/proteins_emapper/*/*annotations > pre_file_list.txt
 		sed "s/  */\t/g" pre_file_list.txt | cut -f 9 | sed "s/\//\t/g" | cut -f3 > file_list.txt
 
 		#Run script to make a table out of the emapper output from rule gene_families_emapper
@@ -142,32 +146,6 @@ rule gene_families_emapper:
 		rm file_list.txt
 		'
 		"""
-
-#If above rules run fine, the below one is irrelevant
-rule gene_families_table:
-	input:
-		emapper="output/proteins_emapper/"
-	output:
-		gene_table="output/gene-family_profiles.csv"
-#	conda:
-#		"checkm_v1.2.2.yaml"
-#		"checkm_v1.2.2"
-	shell:
-		r"""
-		bash -c '
-            	. $HOME/.bashrc 
-		conda activate bacterial_phenotypes
-
-		ls -lh {input.emapper}/*/*annotations > pre_file_list.txt
-		sed "s/  */\t/g" pre_file_list.txt | cut -f 9 | sed "s/\//\t/g" | cut -f3 > file_list.txt
-
-		#Run script to make a table out of the emapper output from rule gene_families_emapper
-		python3 scripts/genes_table.py file_list.txt output/proteins_emapper/ output/
-		rm pre_file_list.txt
-		rm file_list.txt
-		'
-		"""
-
 
 #rule pfam:
 #	input:
