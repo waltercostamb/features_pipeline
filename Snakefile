@@ -33,7 +33,9 @@ rule all:
 		#genes_checkm
 		expand("output/bins/{id}/genes.faa", id=genomeID_lst),
 		#gene_families_emapper
-		expand("output/proteins_emapper/{id}", id=genomeID_lst)
+		expand("output/proteins_emapper/{id}", id=genomeID_lst),
+		#isoelectric point
+		expand("output/isoelectric_point_files/{id}_iso-point.csv", id=genomeID_lst)
 
 
 #Rule to generate k-mer counts using Gerbil and formatting the output
@@ -127,14 +129,14 @@ rule gene_families_emapper:
 		mkdir output/proteins_emapper/{wildcards.id}
 	
 		#Run eggnog emapper
-#		emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
+		emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
 
 		#Line below is an alternative to emapper for debugging purposes
-		cp -r proteins_emapper_backup/{wildcards.id} output/proteins_emapper/.
+#		cp -r proteins_emapper_backup/{wildcards.id} output/proteins_emapper/.
 
 		#Deactivate emapper conda and activate python3
 		conda deactivate
-	        # Activate the default environment (base)
+	        # Activate the python3 environment
 		conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
 
 		ls -lh output/proteins_emapper/*/*annotations > pre_file_list.txt
@@ -144,6 +146,53 @@ rule gene_families_emapper:
 		python3 scripts/genes_table.py file_list.txt output/proteins_emapper/ output/
 		rm pre_file_list.txt
 		rm file_list.txt
+		'
+		"""
+
+rule isoelectric_point:
+	input:
+		checkm="output/bins/{id}/genes.faa"
+	output:
+		isoelectric_point="output/isoelectric_point_files/{id}_iso-point.csv"
+	shell:
+		r"""
+		bash -c '
+            	. $HOME/.bashrc 
+		conda init bash
+	        # Activate the python3 environment
+		conda activate bacterial_phenotypes
+
+		#Split genes.faa
+		bash scripts/split_protein_file.sh {input.checkm}
+		#Enter in folder to avoid producing many itmp files in main folder
+		cd split_protein_files_tmp
+
+		counter=1
+
+		#Loop for each split file to calculate isoelectric point
+		for file in ./*faa; do
+			python3 ../scripts/emboss_pepstats.py --email veo.lab@uni-jena.de --sequence "$file" --quiet
+			mv emboss*.out.txt "emboss$counter.out"
+			((counter++))
+		done
+
+		#Remove unnecessary output from emboss
+		rm emboss*.sequence.txt
+		rm emboss*.submission.params
+
+		#Cat all outputs into one file
+		cat emboss*.out > tmp_emboss_all.out
+		#Return to main folder
+		cd ../
+
+		#Create output folder
+		if [ ! -d output/isoelectric_point_files ]; then 
+           		mkdir output/isoelectric_point_files
+		fi
+
+		#Extract protein names and isoelectric points and save into output file 
+		python3 scripts/extract_isoeletric-point.py split_protein_files_tmp/tmp_emboss_all.out > {output.isoelectric_point}
+		rm -r split_protein_files_tmp
 		'
 		"""
 

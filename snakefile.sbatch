@@ -5,7 +5,7 @@
 #SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=40
-#SBATCH --partition=fat
+#SBATCH --partition=gpu
 #SBATCH --mem=240G
 
 # Load any necessary modules if needed
@@ -15,5 +15,5 @@ source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
 conda activate snakemake_v7.24.0
 
 # Run Snakemake
-snakemake --use-conda --cores 1 --rerun-incomplete
+snakemake --use-conda --cores 1
 conda deactivate
