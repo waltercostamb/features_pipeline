@@ -34,7 +34,7 @@ rule all:
 		expand("output/bins/{id}/genes.faa", id=genomeID_lst),
 		#gene_families_emapper
 		expand("output/proteins_emapper/{id}", id=genomeID_lst),
-		#isoelectric point
+		#isoelectric_point
 		expand("output/isoelectric_point_files/{id}_iso-point.csv", id=genomeID_lst)
 
 
@@ -171,7 +171,7 @@ rule isoelectric_point:
 
 		#Loop for each split file to calculate isoelectric point
 		for file in ./*faa; do
-			python3 ../scripts/emboss_pepstats.py --email veo.lab@uni-jena.de --sequence "$file" --quiet
+			python3 ../scripts/emboss_pepstats.py --email jena@email.de --sequence "$file" --quiet
 			mv emboss*.out.txt "emboss$counter.out"
 			((counter++))
 		done
