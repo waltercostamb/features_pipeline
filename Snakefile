@@ -1,20 +1,44 @@
 #Developer: Maria Beatriz Walter Costa, waltercostamb@gmail.com
 #This pipeline extracts diverse features from bacterial genomes.
 
+import argparse
+import sys
 import json
 
-#Read variables from config.json file
-with open('config.json', 'r') as config_file:
+# Create an argument parser
+parser = argparse.ArgumentParser(description="Your script description")
+
+#config_file_name = sys.argv[1]
+
+# Add command-line arguments
+parser.add_argument("--configfile", help="Path to the config file")
+parser.add_argument("--snakefile", help="Path to the Snakefile")
+parser.add_argument("--cores", type=int, help="Number of cores to use")
+parser.add_argument("--use-conda", action="store_true", help="Use Conda")
+
+# Parse the command-line arguments
+args = parser.parse_args()
+
+# Access the arguments
+config_file_name = args.configfile
+snakefile_path = args.snakefile
+cores = args.cores
+use_conda = args.use_conda
+
+#Read variables from the specified config file
+with open(config_file_name, 'r') as config_file:
     config_data = json.load(config_file)
 
 #Store variables from the loaded JSON data
-genomes = config_data["genomes"]
-K = int(config_data["K"])
-threads_gerbil = int(config_data["threads_gerbil"])
-threads_checkm = int(config_data["threads_checkm"])
-threads_emapper = int(config_data["threads_emapper"])
-emapper_seed_ortholog_evalue = int(config_data["emapper_seed_ortholog_evalue"])
-emapper_block_size = int(config_data["emapper_block_size"])
+user_path			= config_data["user_path"]
+input_folder			= config_data["input_folder"]
+genomes 			= config_data["genomes"]
+K 				= int(config_data["K"])
+threads_gerbil 			= int(config_data["threads_gerbil"])
+threads_checkm 			= int(config_data["threads_checkm"])
+threads_emapper 		= int(config_data["threads_emapper"])
+emapper_seed_ortholog_evalue 	= int(config_data["emapper_seed_ortholog_evalue"])
+emapper_block_size 		= int(config_data["emapper_block_size"])
 
 #Read the list of genome files
 genomeID_lst = []
@@ -28,20 +52,36 @@ for line in fh_in:
 #snakemake --use-conda --cores 1
 rule all:
 	input: 
+		#test
+		expand("{user_path}/output_features/{id}.out", id=genomeID_lst, user_path=user_path)
 		#kmers
-		expand("output/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K),
+#		expand("output/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K),
 		#genes_checkm
-		expand("output/bins/{id}/genes.faa", id=genomeID_lst),
+#		expand("output/bins/{id}/genes.faa", id=genomeID_lst),
 		#gene_families_emapper
-		expand("output/proteins_emapper/{id}", id=genomeID_lst),
+#		expand("output/proteins_emapper/{id}", id=genomeID_lst),
 		#isoelectric_point
-		expand("output/isoelectric_point_files/{id}_iso-point.csv", id=genomeID_lst)
+#		expand("output/isoelectric_point_files/{id}_iso-point.csv", id=genomeID_lst)
 
+rule test:
+	input:
+		genome="{user_path}/genomes/{id}.fasta"
+	output:
+		ls="{user_path}/output_features/{id}.out"
+	shell:
+		r"""
+		#Create output folder of the Snakefile pipeline
+		if [ ! -d output_features ]; then 
+			mkdir output_features
+		fi
+		ls -lh {input.genome} > {output.ls}
+		"""
 
 #Rule to generate k-mer counts using Gerbil and formatting the output
 rule kmers:
 	input:
-		genome="input/{id}.fasta"
+		#genome="input/{id}.fasta"
+		genome="{id}*.fasta"
 	output:
 		kmers="output/kmer_files/{id}_kmer{K}.txt"
 	params:
@@ -80,7 +120,7 @@ rule kmers:
 #Rule to annotate genes (runs checkM lineage_wf and checkm qa)
 rule genes_checkm:
 	input:
-		genomes="input"
+		genomes="input_folder"
 	output:
 		checkm="output/bins/{id}/genes.faa", 
 		lineage=directory("output/bins/{id}"),
