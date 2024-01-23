@@ -31,7 +31,6 @@ with open(config_file_name, 'r') as config_file:
     config_data = json.load(config_file)
 
 #Store variables from the loaded JSON data (config file)
-input_folder			= config_data["input_folder"]
 genomes 			= config_data["genomes"]
 K 				= int(config_data["K"])
 threads_gerbil 			= int(config_data["threads_gerbil"])
@@ -56,26 +55,26 @@ rule all:
 		#expand("output_features/{id}.out", id=genomeID_lst)
 		#kmers
 		expand("output_features/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K),
-		#genes_checkm
-		expand("output_features/bins/{id}/{id}_qa.txt", id=genomeID_lst)
+		#genes_checkm_lineage
+		"output_features/bins"
 		#gene_families_emapper
 #		expand("output_features/proteins_emapper/{id}", id=genomeID_lst),
 		#isoelectric_point
 #		expand("output_features/isoelectric_point_files/{id}_iso-point.csv", id=genomeID_lst)
 
-rule test:
-	input:
-		genome="genomes/{id}.fasta"
-	output:
-		ls="output_features/{id}.out"
-	shell:
-		r"""
-		#Create output folder of the Snakefile pipeline
-		if [ ! -d output_features ]; then 
-			mkdir output_features
-		fi
-		ls -lh {input.genome} > {output.ls}
-		"""
+#rule test:
+#	input:
+#		genome="genomes/{id}.fasta"
+#	output:
+#		ls="output_features/{id}.out"
+#	shell:
+#		r"""
+#		#Create output folder of the Snakefile pipeline
+#		if [ ! -d output_features ]; then 
+#			mkdir output_features
+#		fi
+#		ls -lh {input.genome} > {output.ls}
+#		"""
 
 #Rule to generate k-mer counts using Gerbil and formatting the output
 rule kmers:
@@ -118,16 +117,13 @@ rule kmers:
 		rm list_kmer{params.k}_files.txt
         	"""
 
-#Output of checkm DIRECTORY/bins/CAADIS000000000/genes.faa
-#WARNING: do not change t to more than 20 (see wiki)
-#Rule to annotate genes (runs checkM lineage_wf and checkm qa)
-rule genes_checkm:
+#Rule to run checkm lineage_wf 
+rule genes_checkm_lineage:
 	input:
 		genomes="genomes"
 	output:
-#		checkm="output_features/bins/{id}/genes.faa", 
-#		lineage=directory("output_features/bins/{id}"),
-		qa="output_features/bins/{id}/{id}_qa.txt"
+		bins=directory("output_features/bins"),
+		lineage="output_features/lineage.ms"
 	params:
 		t=threads_checkm
 ##	conda:
@@ -148,11 +144,43 @@ rule genes_checkm:
 		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
             	conda activate checkm_v1.2.2
 
-#		CheckM takes a list of Fasta files from the input folder ({input.genomes})
 		checkm lineage_wf -t {params.t} -x fasta {input.genomes} output_features
-		checkm qa -o 2 -f {output.qa} output_features/lineage.ms output_features
+
+		while IFS= read -r line; do
+			#output below not working
+			checkm qa -o 2 -f "output_features/bins/${line}/${line}_qa.txt" {output.lineage} output_features
+		done < files.txt
 		'
 		"""
+
+#Rule to run checkm qa 
+#rule genes_checkm_qa:
+#	input:
+#		genomes="genomes",
+#		lineage=rules.genes_checkm_lineage.output.lineage
+#	output:
+#		qa="output_features/bins/{id}/{id}_qa.txt"
+#	params:
+#		t=threads_checkm
+##	conda:
+##		"checkm_v1.2.2.yaml"
+##		"checkm_v1.2.2"
+#	shell:
+#		r"""
+#		bash -c '
+ #           	. $HOME/.bashrc # if not loaded automatically
+#		conda init bash
+
+#		#Activate conda environment
+#		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
+ #           	conda activate checkm_v1.2.2
+
+
+       # 	echo "Lineage output is ready: ${wait_for}"
+
+#		checkm qa -o 2 -f {output.qa} {input.lineage} output_features
+#		'
+#		"""
 	
 rule gene_families_emapper:
 	input:

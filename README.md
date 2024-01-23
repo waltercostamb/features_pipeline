@@ -34,6 +34,12 @@ $ls output/
 kmer9_profiles.tsv
 ```
 
+- Create file *files.txt* containing the IDs you want to run through the pipeline using the following command:
+
+```
+ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
+```
+
 ## Run the pipeline
 
 After preparing your data, to run this pipeline, you can either:  
