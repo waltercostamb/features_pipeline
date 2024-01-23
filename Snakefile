@@ -5,32 +5,32 @@ import argparse
 import sys
 import json
 
-# Create an argument parser
+#Create argument parser
 parser = argparse.ArgumentParser(description="Your script description")
 
-#config_file_name = sys.argv[1]
-
-# Add command-line arguments
+#Add command-line arguments
 parser.add_argument("--configfile", help="Path to the config file")
 parser.add_argument("--snakefile", help="Path to the Snakefile")
 parser.add_argument("--cores", type=int, help="Number of cores to use")
 parser.add_argument("--use-conda", action="store_true", help="Use Conda")
 
-# Parse the command-line arguments
+#Parse the command-line arguments
 args = parser.parse_args()
 
-# Access the arguments
+#Access the command line arguments
 config_file_name = args.configfile
 snakefile_path = args.snakefile
 cores = args.cores
 use_conda = args.use_conda
 
+#Add variables of general use
+scripts				= "/home/no58rok/features_pipeline/scripts"
+
 #Read variables from the specified config file
 with open(config_file_name, 'r') as config_file:
     config_data = json.load(config_file)
 
-#Store variables from the loaded JSON data
-user_path			= config_data["user_path"]
+#Store variables from the loaded JSON data (config file)
 input_folder			= config_data["input_folder"]
 genomes 			= config_data["genomes"]
 K 				= int(config_data["K"])
@@ -53,21 +53,21 @@ for line in fh_in:
 rule all:
 	input: 
 		#test
-		expand("{user_path}/output_features/{id}.out", id=genomeID_lst, user_path=user_path)
+		#expand("output_features/{id}.out", id=genomeID_lst)
 		#kmers
-#		expand("output/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K),
+		expand("output_features/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K),
 		#genes_checkm
-#		expand("output/bins/{id}/genes.faa", id=genomeID_lst),
+		expand("output_features/bins/{id}/{id}_qa.txt", id=genomeID_lst)
 		#gene_families_emapper
-#		expand("output/proteins_emapper/{id}", id=genomeID_lst),
+#		expand("output_features/proteins_emapper/{id}", id=genomeID_lst),
 		#isoelectric_point
-#		expand("output/isoelectric_point_files/{id}_iso-point.csv", id=genomeID_lst)
+#		expand("output_features/isoelectric_point_files/{id}_iso-point.csv", id=genomeID_lst)
 
 rule test:
 	input:
-		genome="{user_path}/genomes/{id}.fasta"
+		genome="genomes/{id}.fasta"
 	output:
-		ls="{user_path}/output_features/{id}.out"
+		ls="output_features/{id}.out"
 	shell:
 		r"""
 		#Create output folder of the Snakefile pipeline
@@ -80,25 +80,29 @@ rule test:
 #Rule to generate k-mer counts using Gerbil and formatting the output
 rule kmers:
 	input:
-		#genome="input/{id}.fasta"
-		genome="{id}*.fasta"
+		genome="genomes/{id}.fasta"
 	output:
-		kmers="output/kmer_files/{id}_kmer{K}.txt"
+		kmers="output_features/kmer_files/{id}_kmer{K}.txt"
 	params:
 		k=K,
 		t=threads_gerbil
 	shell:
 		r"""
+		#Create output folder if it has not been done before
+		if [ ! -d output_features ]; then 
+			mkdir output_features
+		fi
+		
 		#Create output folder of Gerbil's output files
-		if [ ! -d output/kmer_files ]; then 
-           		mkdir output/kmer_files
+		if [ ! -d output_features/kmer_files ]; then 
+           		mkdir output_features/kmer_files
 		fi
 
 		#Gerbil
 	        /home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -t {params.t} -k {params.k} -l 1 -o fasta {input.genome} temp {output.kmers}
 
 		#Create list of files
-      	  	ls -lh output/kmer_files/*kmer{params.k}.txt | sed 's/  */\t/g' | cut -f9 | sed 's/output\/kmer_files\///g' | sed 's/_kmer{params.k}.txt//g' > list_kmer{params.k}_files.txt
+      	  	ls -lh output_features/kmer_files/*kmer{params.k}.txt | sed 's/  */\t/g' | cut -f9 | sed 's/output_features\/kmer_files\///g' | sed 's/_kmer{params.k}.txt//g' > list_kmer{params.k}_files.txt
 		
 		#Create tmp folder
 		if [ ! -d tmp ]; then 
@@ -106,25 +110,24 @@ rule kmers:
 		fi
 
 		#Run scripts to convert Gerbil output formats
-		python3 scripts/d_make_kmer_table.py list_kmer{params.k}_files.txt tmp
-		python3 scripts/d_append_agg_kmer_tables.py list_kmer{params.k}_files.txt output/kmer_files
+		python3 {scripts}/d_make_kmer_table.py list_kmer{params.k}_files.txt tmp {params.k}
+		python3 {scripts}/d_append_agg_kmer_tables.py list_kmer{params.k}_files.txt output_features/kmer_files
 
-		mv output/kmer_files/kmer{params.k}_profiles.tsv output/.
+		mv output_features/kmer_files/kmer{params.k}_profiles.tsv output_features/.
 		rm -r tmp/
 		rm list_kmer{params.k}_files.txt
         	"""
 
 #Output of checkm DIRECTORY/bins/CAADIS000000000/genes.faa
 #WARNING: do not change t to more than 20 (see wiki)
-#To run this rule for one file: snakemake --use-conda --conda-frontend conda --cores 1 output/bins/1266999/genes.faa
 #Rule to annotate genes (runs checkM lineage_wf and checkm qa)
 rule genes_checkm:
 	input:
-		genomes="input_folder"
+		genomes="genomes"
 	output:
-		checkm="output/bins/{id}/genes.faa", 
-		lineage=directory("output/bins/{id}"),
-		qa="output/bins/{id}/{id}_qa.txt"
+#		checkm="output_features/bins/{id}/genes.faa", 
+#		lineage=directory("output_features/bins/{id}"),
+		qa="output_features/bins/{id}/{id}_qa.txt"
 	params:
 		t=threads_checkm
 ##	conda:
@@ -133,6 +136,11 @@ rule genes_checkm:
 	shell:
 		r"""
 		bash -c '
+		#Create output folder if it has not been done before
+		if [ ! -d output_features ]; then 
+			mkdir output_features
+		fi
+
             	. $HOME/.bashrc # if not loaded automatically
 		conda init bash
 
@@ -141,16 +149,16 @@ rule genes_checkm:
             	conda activate checkm_v1.2.2
 
 #		CheckM takes a list of Fasta files from the input folder ({input.genomes})
-		checkm lineage_wf -t {params.t} -x fasta {input.genomes} output
-		checkm qa -o 2 -f {output.qa} output/lineage.ms output
+		checkm lineage_wf -t {params.t} -x fasta {input.genomes} output_features
+		checkm qa -o 2 -f {output.qa} output_features/lineage.ms output_features
 		'
 		"""
 	
 rule gene_families_emapper:
 	input:
-		checkm="output/bins/{id}/genes.faa"
+		checkm="output_features/bins/{id}/genes.faa"
 	output:
-		emapper=directory("output/proteins_emapper/{id}")
+		emapper=directory("output_features/proteins_emapper/{id}")
 	params:
 		t=threads_emapper,
 		e=emapper_seed_ortholog_evalue,
@@ -161,6 +169,11 @@ rule gene_families_emapper:
 	shell:
 		r"""
 		bash -c '
+		#Create output folder if it has not been done before
+		if [ ! -d output_features ]; then 
+			mkdir output_features
+		fi
+
             	. $HOME/.bashrc 
 		conda init bash
 		source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
@@ -191,12 +204,17 @@ rule gene_families_emapper:
 
 rule isoelectric_point:
 	input:
-		checkm="output/bins/{id}/genes.faa"
+		checkm="output_features/bins/{id}/genes.faa"
 	output:
-		isoelectric_point="output/isoelectric_point_files/{id}_iso-point.csv"
+		isoelectric_point="output_features/isoelectric_point_files/{id}_iso-point.csv"
 	shell:
 		r"""
 		bash -c '
+		#Create output folder if it has not been done before
+		if [ ! -d output_features ]; then 
+			mkdir output_features
+		fi
+
             	. $HOME/.bashrc 
 		conda init bash
 	        # Activate the python3 environment
@@ -226,8 +244,8 @@ rule isoelectric_point:
 		cd ../
 
 		#Create output folder
-		if [ ! -d output/isoelectric_point_files ]; then 
-           		mkdir output/isoelectric_point_files
+		if [ ! -d output_features/isoelectric_point_files ]; then 
+           		mkdir output_features/isoelectric_point_files
 		fi
 
 		#Extract protein names and isoelectric points and save into output file 
@@ -243,6 +261,10 @@ rule isoelectric_point:
 #		?
 #	shell:
 #		r"""
+#		#Create output folder if it has not been done before
+#		if [ ! -d output_features ]; then 
+#			mkdir output_features
+#		fi
 #		#Run HMMER
 #		/home/groups/VEO/tools/hmmer/v3.3.1/bin/hmmsearch input.checkm DB_PATH	
 #		"""

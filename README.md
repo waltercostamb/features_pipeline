@@ -6,7 +6,33 @@ According to https://snakemake.readthedocs.io/en/latest/tutorial/tutorial.html#t
 
 # Usage
 
-To use this pipeline, you can either:  
+## Prepare your data
+
+Before running the pipeline, you have to make sure everything is set in your folder.
+
+- Make sure the directory which contains your bacterial genomes (or contigs) is named *genomes* (in lowercase, as the example of the GIT page https://github.com/waltercostamb/features_pipeline)
+- Make sure the FASTA files have the extension *.fasta*
+- To be sure that the output refers to the correct input file, name your files as follows: FILE\_ID.fasta
+
+Example input:  
+
+```
+$ls genomes/
+1266999.fasta  743966.fasta  GCA\_900660695.fasta
+```
+
+Example output of the kmer rule containing individual kmer profiles and a TSV file combining all files:
+
+```
+$ls output/kmer_files/ 
+1266999_kmer9.txt  743966_kmer9.txt  GCA_900660695_kmer9.txt
+$ls output/
+kmer9_profiles.tsv
+```
+
+## Run the pipeline
+
+After preparing your data, to run this pipeline, you can either:  
 
 - Submit an sbatch file to slurm, as if the Snakefile would be a usual script
 
