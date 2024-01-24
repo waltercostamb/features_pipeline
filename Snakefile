@@ -55,10 +55,12 @@ rule all:
 		#expand("output_features/{id}.out", id=genomeID_lst)
 		#kmers
 		expand("output_features/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K),
-		#genes_checkm_lineage
-		"output_features/bins"
+		#genes_checkm
+		"output_features/bins",
 		#gene_families_emapper
-#		expand("output_features/proteins_emapper/{id}", id=genomeID_lst),
+		expand("output_features/proteins_emapper/{id}", id=genomeID_lst),
+		#gene_families_table
+		"output_features/gene-family_profiles.csv"
 		#isoelectric_point
 #		expand("output_features/isoelectric_point_files/{id}_iso-point.csv", id=genomeID_lst)
 
@@ -117,8 +119,8 @@ rule kmers:
 		rm list_kmer{params.k}_files.txt
         	"""
 
-#Rule to run checkm lineage_wf 
-rule genes_checkm_lineage:
+#Rule to run checkm 
+rule genes_checkm:
 	input:
 		genomes="genomes"
 	output:
@@ -144,91 +146,69 @@ rule genes_checkm_lineage:
 		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
             	conda activate checkm_v1.2.2
 
-		checkm lineage_wf -t {params.t} -x fasta {input.genomes} output_features
+                #Run checkm lineage only once
+                checkm lineage_wf -t {params.t} -x fasta {input.genomes} output_features
+                #Substitute checkm run for a simple copying of backup files (for debug purposes)
+                #cp -r checkm_output/bins output_features/.
+                #cp -r checkm_output/lineage.ms output_features/.
 
-		while IFS= read -r line; do
-			#output below not working
-			checkm qa -o 2 -f "output_features/bins/${line}/${line}_qa.txt" {output.lineage} output_features
-		done < files.txt
+                #Run checkm qa for every ID
+                while IFS= read -r line; do
+                        checkm qa -o 2 -f output_features/bins/$line/$line-qa.txt {output.lineage} output_features
+                done < files.txt
 		'
 		"""
 
-#Rule to run checkm qa 
-#rule genes_checkm_qa:
-#	input:
-#		genomes="genomes",
-#		lineage=rules.genes_checkm_lineage.output.lineage
-#	output:
-#		qa="output_features/bins/{id}/{id}_qa.txt"
-#	params:
-#		t=threads_checkm
-##	conda:
-##		"checkm_v1.2.2.yaml"
-##		"checkm_v1.2.2"
-#	shell:
-#		r"""
-#		bash -c '
- #           	. $HOME/.bashrc # if not loaded automatically
-#		conda init bash
-
-#		#Activate conda environment
-#		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
- #           	conda activate checkm_v1.2.2
-
-
-       # 	echo "Lineage output is ready: ${wait_for}"
-
-#		checkm qa -o 2 -f {output.qa} {input.lineage} output_features
-#		'
-#		"""
-	
 rule gene_families_emapper:
-	input:
-		checkm="output_features/bins/{id}/genes.faa"
-	output:
-		emapper=directory("output_features/proteins_emapper/{id}")
-	params:
-		t=threads_emapper,
-		e=emapper_seed_ortholog_evalue,
-		b=emapper_block_size
-#	conda:
-#		"checkm_v1.2.2.yaml"
-#		"checkm_v1.2.2"
-	shell:
-		r"""
-		bash -c '
-		#Create output folder if it has not been done before
-		if [ ! -d output_features ]; then 
-			mkdir output_features
-		fi
+        input:
+                checkm="output_features/bins/{id}/genes.faa"
+        output:
+                emapper=directory("output_features/proteins_emapper/{id}")
+        params:
+                t=threads_emapper,
+                e=emapper_seed_ortholog_evalue,
+                b=emapper_block_size
+#       conda:
+#               "checkm_v1.2.2.yaml"
+#               "checkm_v1.2.2"
+        shell:
+                r"""
+                bash -c '
+                . $HOME/.bashrc 
+                conda init bash
+                source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
+                conda activate eggnog-mapper_v2.1.11
 
-            	. $HOME/.bashrc 
-		conda init bash
-		source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
-		conda activate eggnog-mapper_v2.1.11
+                #Run eggnog emapper
+                #emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
+                #Substitute eggnog emapper run for a simple copying of backup files (for debug purposes)
+                mkdir output_features/proteins_emapper
+                cp -r backup_proteins_emapper/{wildcards.id} output_features/proteins_emapper/.
+                '
+                """	
 
-		mkdir output/proteins_emapper/{wildcards.id}
-	
-		#Run eggnog emapper
-		emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
+rule gene_families_table:
+        input:
+                emapper_folder="output_features/proteins_emapper/"
+        output:
+                gene_profiles="output_features/gene-family_profiles.csv"
+#       conda:
+#               "checkm_v1.2.2.yaml"
+#               "checkm_v1.2.2"
+        shell:
+                r"""
+                bash -c '
+                . $HOME/.bashrc
+                conda init bash
+                source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
+                # Activate the python3 environment
+                conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
+                
+                #Run script to make a table out of the emapper output from rule gene_families_emapper
+                python3 {scripts}/genes_table.py files.txt {input.emapper_folder} output_features/
+                '
+                """
 
-		#Line below is an alternative to emapper for debugging purposes
-#		cp -r proteins_emapper_backup/{wildcards.id} output/proteins_emapper/.
-
-		#Deactivate emapper conda and activate python3
-		conda deactivate
-	        # Activate the python3 environment
-		conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
-
-		ls -lh output/proteins_emapper/*/*annotations > pre_file_list.txt
-		sed "s/  */\t/g" pre_file_list.txt | cut -f 9 | sed "s/\//\t/g" | cut -f3 > file_list.txt
-
-		#Run script to make a table out of the emapper output from rule gene_families_emapper
-		python3 scripts/genes_table.py file_list.txt output/proteins_emapper/ output/
-		rm pre_file_list.txt
-		rm file_list.txt
-		'
-		"""
 
 rule isoelectric_point:
 	input:
