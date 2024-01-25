@@ -2,7 +2,7 @@
 
 # Check if the input file is provided in the script call
 if [ "$#" -eq 0 ]; then
-    echo "Usage: $0 <input>"
+    echo "Usage: $0 <input> <folder>"
     exit 1
 fi
 
@@ -10,7 +10,7 @@ fi
 fasta_file="$1"
 
 # Define name of output directory
-output_dir="split_protein_files_tmp"
+output_dir="$2"
 
 # Remove existing output directory if it exists
 if [ -d "$output_dir" ]; then

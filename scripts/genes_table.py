@@ -55,6 +55,8 @@ for file_name in list_files:
     #Open file, store 5th column
     t = input_folder + str(file_name) + '/' + str(file_name) + '.emapper.annotations'
     t2 = glob(t)
+    print(t)
+    print(t2)
     file1 = str(t2[0])
 
     #print(file1) 

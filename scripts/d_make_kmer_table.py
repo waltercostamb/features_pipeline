@@ -2,7 +2,7 @@
 
 #Developer: Rose Brouns, modified by MB Walter Costa
 '''Makes from the fasta outputs with kmers counts from gerbil a table per sample
-USAGE: SCRIPT input_file output_path k'''
+USAGE: SCRIPT input_file output_path k output_folder'''
 #input_file contains a list of IDs one per line and output path is a temporary folder
 
 ### HOUSEKEEPING
@@ -34,7 +34,8 @@ if __name__ == '__main__':
     # input_file is something like: list_kmer9_files.txt
     input_file = sys.argv[1]
     k =  sys.argv[3]
-    
+    output_folder = sys.argv[4]
+
     #output_path should be tmp/
     output_path = sys.argv[2]
 
@@ -51,7 +52,7 @@ if __name__ == '__main__':
     for id in file_ids:
 
         # id is defined by Snakemake and has a strict format, e. g. CAADIQ000000000_kmer9.txt
-        full_id = 'output_features/kmer_files/' + id + '_kmer' + k + '.txt'
+        full_id = output_folder + '/kmer_files/' + id + '_kmer' + k + '.txt'
         
         # Read the data from the id file
         with open(full_id, 'r') as file:
