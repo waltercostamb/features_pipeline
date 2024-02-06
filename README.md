@@ -10,7 +10,7 @@ Example input:
 
 ```
 $ls genomes/
-1266999.fasta  743966.fasta  GCA\_900660695.fasta
+1266999.fasta  743966.fasta  GCA_900660695.fasta
 ```
 
 Example output of the kmer rule:
