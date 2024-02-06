@@ -192,8 +192,8 @@ rule gene_families_emapper:
                 #Run eggnog emapper
                 while IFS= read -r line; do
                 	#Substitute emapper run for a backup files copy (for debugging)
-	                cp -r backup_proteins_emapper/$line {output_features}/proteins_emapper/.
-                	#emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o $line --output_dir {output.emapper} -m diamond -i {output_features}/bins/$line/genes.faa --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
+	                #cp -r backup_proteins_emapper/$line {output_features}/proteins_emapper/.
+                	emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o $line --output_dir {output.emapper} -m diamond -i {output_features}/bins/$line/genes.faa --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
                 done < files.txt
                 '
                 """	

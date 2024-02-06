@@ -15,5 +15,5 @@ source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
 conda activate snakemake_v7.24.0
 
 # Run Snakemake
-snakemake --use-conda --cores 1
+snakemake --use-conda --cores 1 --configfile config.json --snakefile /home/no58rok/features_pipeline/Snakefile
 conda deactivate
