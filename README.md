@@ -3,7 +3,7 @@
 This pipeline extracts features from bacterial genomes.  
 
 <p align="center">
-  <img src="./figures/features_pipeline.png" alt="Alt Text" width="450"/>
+  <img src="./figures/features_pipeline.png" alt="Alt Text" width="600"/>
 </p>
 
 Example input:  
