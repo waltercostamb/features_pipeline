@@ -81,6 +81,12 @@ The default mode of Snakefile is to run all rules. If you want to run a specific
 
 # Available features
 
+The directed acyclic graph (DAG) below shows the pipeline's hierarchy of rules:  
+
+<p align="center">
+  <img src="./figures/dag.png" alt="Alt Text" width="700"/>
+</p>
+
 ## kmers
 
 kmers are sub-sequences of a genome. Kmers have length k, which can be defined by the user. The default is 9. If you want a different k, change it in file config.json. Kmers are calculated with Gerbil. An in-house script creates a table with kmers per file ID. Rule: kmers.
