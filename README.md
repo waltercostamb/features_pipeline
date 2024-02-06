@@ -49,6 +49,7 @@ ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$'
 - Submit an sbatch file to slurm, as if the Snakefile would be a usual script:
 
 ```
+cp /home/no58rok/features_pipeline/snakefile.sbatch .
 sbatch snakefile.sbatch 
 ```
 
