@@ -1,6 +1,6 @@
 {
     "genomes": "files.txt",
-    "output_folder": "output_funny",
+    "output_folder": "output_features",
     "K": 9,
     "threads_gerbil": 40,
     "threads_checkm": 40,
