@@ -45,7 +45,6 @@ cp /home/no58rok/features_pipeline/snakefile.sbatch .
 
 ```
 ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
-
 ```
 
 - Adapt the config file or the snakefile if needed
