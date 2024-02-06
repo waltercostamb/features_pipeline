@@ -26,11 +26,14 @@ kmer9_profiles.tsv
 
 # Usage 
 
-To learn how to use the pipeline, run it for the example genomes provided in the repository. First, copy the folder *genomes* to the path you wish to run the pipeline:
+To learn how to use the pipeline, run it for the example genomes provided in the repository. 
+First, copy the folder *genomes* to the path you wish to run the pipeline along with the config and sbatch files:
 
 ```
 cd PATH
 cp -r /home/no58rok/features_pipeline/genomes .
+cp /home/no58rok/features_pipeline/config.json .
+cp /home/no58rok/features_pipeline/snakefile.sbatch .
 ```
 
 ## Prepare your data
@@ -42,14 +45,16 @@ cp -r /home/no58rok/features_pipeline/genomes .
 
 ```
 ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
+
 ```
+
+- Adapt the config file or the snakefile if needed
 
 ## Run the pipeline
 
 - Submit an sbatch file to slurm, as if the Snakefile would be a usual script:
 
 ```
-cp /home/no58rok/features_pipeline/snakefile.sbatch .
 sbatch snakefile.sbatch 
 ```
 
