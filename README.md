@@ -1,22 +1,10 @@
 # Features pipeline
 
-This is a snakemake pipeline to extract features from bacterial genomes. The final product will be delivered to Swapnil and available for use for the VEO/MGX groups.
+This pipeline extracts features from bacterial genomes.  
 
 <p align="center">
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="450"/>
 </p>
-
-According to https://snakemake.readthedocs.io/en/latest/tutorial/tutorial.html#tutorial, "a Snakemake workflow scales without modification from single core workstations and multi-core servers to cluster or batch systems.". Our aim with this pipeline is for users of the VEO/MGX groups to be able to use the pipeline in draco using the power of the slurm cluster.  
-
-# Usage
-
-## Prepare your data
-
-Before running the pipeline, you have to make sure everything is set in your folder.
-
-- Make sure the directory which contains your bacterial genomes (or contigs) is named *genomes* (in lowercase, as the example of the GIT page https://github.com/waltercostamb/features_pipeline)
-- Make sure the FASTA files have the extension *.fasta*
-- To be sure that the output refers to the correct input file, name your files as follows: FILE\_ID.fasta
 
 Example input:  
 
@@ -25,16 +13,32 @@ $ls genomes/
 1266999.fasta  743966.fasta  GCA\_900660695.fasta
 ```
 
-Example output of the kmer rule containing individual kmer profiles and a TSV file combining all files:
+Example output of the kmer rule:
 
 ```
+#Individual kmer profiles
 $ls output/kmer_files/ 
 1266999_kmer9.txt  743966_kmer9.txt  GCA_900660695_kmer9.txt
+#TSV file combining all profiles
 $ls output/
 kmer9_profiles.tsv
 ```
 
-- Create file *files.txt* containing the IDs you want to run through the pipeline using the following command:
+# Usage 
+
+To learn how to use the pipeline, run it for the example genomes provided in the repository. First, copy the folder *genomes* to the path you wish to run the pipeline:
+
+```
+cd PATH
+cp -r /home/no58rok/features_pipeline/genomes .
+```
+
+## Prepare your data
+
+- Make sure the directory which contains your bacterial genomes (or contigs) is named *genomes* (in lowercase)
+- Make sure the FASTA files have the extension *.fasta*
+  - the pipeline assumes your files are named in the following way: FILE\_ID.fasta
+- Create *files.txt* containing the FILE\_IDs you want to run through the pipeline:
 
 ```
 ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
@@ -42,9 +46,7 @@ ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$'
 
 ## Run the pipeline
 
-After preparing your data, to run this pipeline, you can either:  
-
-- Submit an sbatch file to slurm, as if the Snakefile would be a usual script
+- Submit an sbatch file to slurm, as if the Snakefile would be a usual script:
 
 ```
 sbatch snakefile.sbatch 
@@ -52,30 +54,27 @@ sbatch snakefile.sbatch
 
 or:
 
-- Allocate a node and run Snakemake directly in the command line, as below. Importantly, some of the software used within Snakefile do not run in the standard node. They require more memory. Therefore, use it in a gpu or fat node.
+- Allocate a node
+- run Snakemake directly in the command line, as below
+
+Importantly, some of the required software do not run in the standard node, since they require more memory. Use gpu or fat.
 
 ```
-#Allocate a node: gpu or fat
+#Allocate a node
 salloc -p gpu --gres=gpu:1 
 salloc -p fat -N 1
 
 #Activate Snakemake
 source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate snakemake_v7.24.0
 
-#Run snakemake. Obs: make sure the feature you want is activated in the Snakfile
+#Run snakemake
 snakemake --use-conda --cores 1 --configfile config.json --snakefile /home/no58rok/features_pipeline/Snakefile
 ```
+## Run specific rules
 
-To make sure the desired feature is activated in the Snakefile: open Snakefile, uncomment the command line(s) referring to the desired feature, comment the other command lines.
+The default mode of Snakefile is to run all rules. If you want to run a specific rule, open Snakefile, uncomment the command line(s) referring to the desired feature(s) and comment the other lines.
 
-# Example
-
-As an example on how to run the pipeline, use the files given as input and the config.file. Run it in an allocated node or as an sbatch script.
-
-
-# Available features  
-
-To activate a feature, go to Snakefile and uncomment the line corresponding to the desired rule. Make sure that your genomes are in folder input and that the list of IDs is in file *genomes.txt*.
+# Available features
 
 ## kmers
 
