@@ -63,7 +63,7 @@ salloc -p fat -N 1
 source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate snakemake_v7.24.0
 
 #Run snakemake. Obs: make sure the feature you want is activated in the Snakfile
-snakemake --use-conda --cores 1
+snakemake --use-conda --cores 1 --configfile config.json --snakefile /home/no58rok/features_pipeline/Snakefile
 ```
 
 To make sure the desired feature is activated in the Snakefile: open Snakefile, uncomment the command line(s) referring to the desired feature, comment the other command lines.

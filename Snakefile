@@ -13,6 +13,7 @@ parser.add_argument("--configfile", help="Path to the config file")
 parser.add_argument("--snakefile", help="Path to the Snakefile")
 parser.add_argument("--cores", type=int, help="Number of cores to use")
 parser.add_argument("--use-conda", action="store_true", help="Use Conda")
+parser.add_argument("--dag", action="store_true", help="Generate DAG")
 
 #Parse the command-line arguments
 args = parser.parse_args()
@@ -22,13 +23,26 @@ config_file_name = args.configfile
 snakefile_path = args.snakefile
 cores = args.cores
 use_conda = args.use_conda
+generate_dag = args.dag
 
 #Add variables of general use
 scripts				= "/home/no58rok/features_pipeline/scripts"
 
+#print(type(config_file_name))
+#<class 'str'>
+
 #Read variables from the specified config file
 with open(config_file_name, 'r') as config_file:
     config_data = json.load(config_file)
+
+#print(type(config_file))
+#<class '_io.TextIOWrapper'>
+
+if generate_dag:  # Added block
+    # Generate DAG
+    #dag_command = f"snakemake --snakefile /home/no58rok/features_pipeline/Snakefile --dag | dot -Tpng > dag.png"
+    dag_command = f"snakemake --snakefile /home/no58rok/features_pipeline/Snakefile --dag"
+    subprocess.run(dag_command, shell=True)
 
 #Store variables from the loaded JSON data (config file)
 genomes 			= config_data["genomes"]
@@ -47,6 +61,8 @@ for line in fh_in:
     line = line.rstrip()
     genomeID_lst.append(line)
 
+
+
 #This rule is the default target rule. 
 #You should only add the final target file/directory per feature, otherwise it gives errors, since
 # there is an order of execution
@@ -56,28 +72,13 @@ rule all:
 		#kmers
 		expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
 		#genes_checkm
-#		expand("{output_features}/bins/", output_features=output_features),
+		#expand("{output_features}/bins", output_features=output_features),
 		#gene_families_emapper
-#		expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features),
 		#expand("{output_features}/proteins_emapper", output_features=output_features)
 		#gene_families_table
-		expand("{output_features}/gene-family_profiles.csv", output_features=output_features)
+		expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
 		#isoelectric_point
-#		expand("{output_features}/isoelectric_point_files/{id}_iso-point.csv", id=genomeID_lst, output_features=output_features)
-
-rule test:
-	input:
-		genome="genomes/{id}.fasta"
-	output:
-		ls="{output_features}/{id}.out"
-	shell:
-		r"""
-		#Create output folder of the Snakefile pipeline
-		if [ ! -d {output_features} ]; then 
-			mkdir {output_features}
-		fi
-		ls -lh {input.genome} > {output.ls}
-		"""
+		expand("{output_features}/isoelectric_point_files", id=genomeID_lst, output_features=output_features)
 
 #Rule to generate k-mer counts using Gerbil and formatting the output
 rule kmers:
@@ -163,11 +164,9 @@ rule genes_checkm:
 
 rule gene_families_emapper:
 	input:
-		checkm="{output_features}/bins",
-		faa="{output_features}/bins/{id}/genes.faa"
+		checkm="{output_features}/bins"
 	output:
-		#emapper=directory("{output_features}/proteins_emapper/{wildcards.id}")
-		emapper="{output_features}/proteins_emapper/{id}"
+		emapper=directory("{output_features}/proteins_emapper")
 	params:
 		t=threads_emapper,
 		e=emapper_seed_ortholog_evalue,
@@ -191,17 +190,19 @@ rule gene_families_emapper:
 		fi
 
                 #Run eggnog emapper
-                #emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.faa} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
-                #Substitute eggnog emapper run for a simple copying of backup files (for debug purposes)
-                echo "cp -r backup_proteins_emapper/{id} {output_features}/proteins_emapper/."
+                while IFS= read -r line; do
+                	#Substitute emapper run for a backup files copy (for debugging)
+	                cp -r backup_proteins_emapper/$line {output_features}/proteins_emapper/.
+                	#emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o $line --output_dir {output.emapper} -m diamond -i {output_features}/bins/$line/genes.faa --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
+                done < files.txt
                 '
                 """	
 
+
+
 rule gene_families_table:
         input:
-                #emapper=expand("{output_features}/proteins_emapper/{id}",output_features=output_features, id=genomeID_lst)
-                emapper="{output_features}/proteins_emapper/{wildcards.id}"
-                #emapper=directory("{output_features}/proteins_emapper")
+                emapper="{output_features}/proteins_emapper"
         output:
                 gene_profiles="{output_features}/gene-family_profiles.csv"
 #       conda:
@@ -224,9 +225,9 @@ rule gene_families_table:
 
 rule isoelectric_point:
 	input:
-		checkm="{output_features}/bins/{id}/genes.faa"
+		checkm="{output_features}/bins"
 	output:
-		isoelectric_point="{output_features}/isoelectric_point_files/{id}_iso-point.csv"
+		isoelectric_point=directory("{output_features}/isoelectric_point_files")
 	shell:
 		r"""
 		bash -c '
@@ -239,40 +240,43 @@ rule isoelectric_point:
 		conda init bash
 	        # Activate the python3 environment
 		conda activate bacterial_phenotypes
-
-        	mkdir "tmp_{wildcards.id}"
-
-		#Split genes.faa
-		bash {scripts}/split_protein_file.sh {input.checkm} "tmp_{wildcards.id}"
-
-		#Enter in folder to avoid producing many itmp files in main folder
-		counter=1
-
-		(cd "tmp_{wildcards.id}"
-		#Loop for each split file to calculate isoelectric point
-		for file in ./*faa; do
-			python3 {scripts}/emboss_pepstats.py --email jena@email.de --sequence "$file" --quiet
-			mv emboss*.out.txt "emboss$counter.out"
-			((counter++))
-		done
-		cd ..
-		)
-
-		#Remove unnecessary output from emboss
-		rm tmp_{wildcards.id}/emboss*.sequence.txt
-		rm tmp_{wildcards.id}/emboss*.submission.params
-
-		#Cat all outputs into one file
-		cat tmp_{wildcards.id}/emboss*.out > tmp_{wildcards.id}/tmp_emboss_all.out
-
+		
 		#Create output folder
 		if [ ! -d {output_features}/isoelectric_point_files ]; then 
            		mkdir {output_features}/isoelectric_point_files
 		fi
 
-		#Extract protein names and isoelectric points and save into output file 
-		python3 {scripts}/extract_isoeletric-point.py tmp_{wildcards.id}/tmp_emboss_all.out > {output.isoelectric_point}
-		rm -r tmp_{wildcards.id} 
+                while IFS= read -r line; do
+			#Create tmp folder
+        		mkdir "tmp_$line"
+
+			#Split genes.faa
+			bash {scripts}/split_protein_file.sh {input.checkm}/$line/genes.faa "tmp_$line"
+
+			#Enter in folder to avoid producing many tmp files in main folder
+			counter=1
+
+			(cd "tmp_$line"
+			#Loop for each split file to calculate isoelectric point
+			for file in ./*faa; do
+				python3 {scripts}/emboss_pepstats.py --email jena@email.de --sequence "$file" --quiet
+				mv emboss*.out.txt "emboss$counter.out"
+				((counter++))
+			done
+			cd ..
+			)
+
+			#Remove unnecessary output from emboss
+			rm tmp_$line/emboss*.sequence.txt
+			rm tmp_$line/emboss*.submission.params
+
+			#Cat all outputs into one file
+			cat tmp_$line/emboss*.out > tmp_$line/tmp_emboss_all.out
+
+			#Extract protein names and isoelectric points and save into output file 
+			python3 {scripts}/extract_isoeletric-point.py tmp_$line/tmp_emboss_all.out > {output.isoelectric_point}/$line-iso_point.csv
+			rm -r tmp_$line 
+                done < files.txt
 		'
 		"""
 
