@@ -185,15 +185,17 @@ rule gene_families_emapper:
 		if [ ! -d "{output_features}/protein_emapper" ]; then 
 			mkdir "{output_features}/proteins_emapper"
 		fi
-		if [ ! -d "{output.emapper}" ]; then 
-			mkdir "{output.emapper}"
-		fi
 
                 #Run eggnog emapper
                 while IFS= read -r line; do
+
+			#Create folder for line/ID
+			if [ ! -d "{output.emapper}/$line" ]; then 
+				mkdir "{output.emapper}/$line"
+			fi
                 	#Substitute emapper run for a backup files copy (for debugging)
 	                #cp -r backup_proteins_emapper/$line {output_features}/proteins_emapper/.
-                	emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o $line --output_dir {output.emapper} -m diamond -i {output_features}/bins/$line/genes.faa --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
+                	emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o $line --output_dir {output.emapper}/$line -m diamond -i {output_features}/bins/$line/genes.faa --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
                 done < files.txt
                 '
                 """	
