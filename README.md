@@ -54,6 +54,9 @@ ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$'
 - Submit an sbatch file to slurm, as if the Snakefile would be a usual script:
 
 ```
+#Activate Snakemake
+source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate snakemake_v7.24.0
+#Run pipeline with sbatch
 sbatch snakefile.sbatch 
 ```
 
