@@ -1,6 +1,6 @@
 # Features pipeline
 
-This pipeline extracts features from bacterial genomes.  
+This pipeline extracts features from bacterial genomes. Here you can learn how to use the pipeline with an example and with your data. 
 
 <p align="center">
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="550"/>
@@ -26,17 +26,22 @@ kmer9_profiles.tsv
 
 # Usage 
 
-To learn how to use the pipeline, run it for the example genomes provided in the repository. 
-First, copy the folder *genomes* to the path you wish to run the pipeline along with the config and sbatch files:
+## Example data
+
+To learn how to use the pipeline, run it for the example files provided in this repository. 
+First, copy the folder *genomes/* to the path you wish to run the pipeline. Copy the config and sbatch files as well:
 
 ```
 cd PATH
 cp -r /home/no58rok/features_pipeline/genomes .
 cp /home/no58rok/features_pipeline/config.json .
 cp /home/no58rok/features_pipeline/snakefile.sbatch .
+cp /home/no58rok/features_pipeline/files.txt .
 ```
 
-## Prepare your data
+## Your data
+
+To use the pipeline with your own data, do the following:
 
 - Make sure the directory which contains your bacterial genomes (or contigs) is named *genomes* (in lowercase)
 - Make sure the FASTA files have the extension *.fasta*
@@ -47,7 +52,16 @@ cp /home/no58rok/features_pipeline/snakefile.sbatch .
 ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
 ```
 
-- Adapt the config file or the snakefile if needed
+- Adapt the config and/or sbatch files if needed:
+
+```
+#Copy
+cp /home/no58rok/features_pipeline/config.json .
+cp /home/no58rok/features_pipeline/snakefile.sbatch .
+#Adapt
+vim config.json
+vim snakefile.sbatch
+```
 
 ## Run the pipeline
 
@@ -65,7 +79,7 @@ or:
 - Allocate a node
 - run Snakemake directly in the command line, as below
 
-Importantly, some of the required software do not run in the standard node, since they require more memory. Use gpu or fat.
+Importantly, some of the required software (such as CheckM) do not run in the standard node, since they require more memory. Use gpu or fat.
 
 ```
 #Allocate a node
@@ -84,7 +98,7 @@ The default mode of Snakefile is to run all rules. If you want to run a specific
 
 # Available features
 
-The directed acyclic graph (DAG) below shows the pipeline's hierarchy of rules:  
+The directed acyclic graph (DAG) below shows the pipeline's hierarchy of rules for the example files:  
 
 <p align="center">
   <img src="./figures/dag.png" alt="Alt Text" width="700"/>
