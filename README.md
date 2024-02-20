@@ -98,20 +98,25 @@ The default mode of Snakefile is to run all rules. If you want to run a specific
 
 # Available features
 
-The directed acyclic graph (DAG) below shows the pipeline's hierarchy of rules for the example files:  
-
-<p align="center">
-  <img src="./figures/dag.png" alt="Alt Text" width="700"/>
-</p>
+A directed acyclic graph (DAG) is shown for each feature. It describes the pipeline's hierarchy of rules.  
 
 ## kmers
 
 kmers are sub-sequences of a genome. Kmers have length k, which can be defined by the user. The default is 9. If you want a different k, change it in file config.json. Kmers are calculated with Gerbil. An in-house script creates a table with kmers per file ID. Rule: kmers.
 
+<p align="center">
+  <img src="./figures/dag_kmers.png" alt="Alt Text" width="350"/>
+</p>
+
 ## Gene families
 
 Genes are first predicted with CheckM (which uses prodigal internally) from the bacterial genomes. Afterwards, families are assigned with eggnog emapper. Finally, an in-house script creates a table with gene families per file ID: 1 symbols the presence of that family in the file ID, while 0 symbols absence.
 Rules: genes_checkm and gene_families_emapper. 
+
+
+<p align="center">
+  <img src="./figures/dag_gene_families.png" alt="Alt Text" width="700"/>
+</p>
 
 ## GC content
 
