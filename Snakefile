@@ -71,10 +71,12 @@ rule all:
 	input: 
 		#kmers
 		expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
-		#genes_checkm
-		#expand("{output_features}/bins", output_features=output_features),
+		#genes_checkm_lineage
+		#expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
+		#genes_checkm_qa
+		expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
 		#gene_families_emapper
-		#expand("{output_features}/proteins_emapper", output_features=output_features)
+		#expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
 		#gene_families_table
 		expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
 		#isoelectric_point
@@ -121,14 +123,13 @@ rule kmers:
 		rm list_kmer{params.k}_files.txt
         	"""
 
-#Rule to run checkm 
-rule genes_checkm:
+#Rule to run checkm lineage_wf 
+rule genes_checkm_lineage:
 	input:
-		genomes="genomes"
+		genome_folder=expand("genomes"),
+		genomes=expand("genomes/{id}.fasta",id=genomeID_lst)
 	output:
-		checkm=directory("{output_features}/bins")
-		#DO NOT use line below, otherwise checkm runs several times
-		#checkm="{output_features}/bins/{id}/genes.faa"
+		checkm=expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
 	params:
 		t=threads_checkm
 ##	conda:
@@ -150,23 +151,41 @@ rule genes_checkm:
             	conda activate checkm_v1.2.2
 
                 #Run checkm lineage only once
-                checkm lineage_wf -t {params.t} -x fasta {input.genomes} {output_features}
+                checkm lineage_wf -t {params.t} -x fasta {input.genome_folder} {output_features}
                 #Substitute checkm run for a simple copying of backup files (for debug purposes)
                 #cp -r checkm_output/bins {output_features}/.
                 #cp -r checkm_output/lineage.ms {output_features}/.
+		'
+		"""
+
+#Rule to run checkm_qa 
+rule checkm_qa:
+	input:
+		checkm="{output_features}/bins/{id}/genes.faa"
+	output:
+		checkm_qa="{output_features}/bins/{id}/{id}-qa.txt"
+	params:
+		t=threads_checkm
+	shell:
+		r"""
+		bash -c '
+            	. $HOME/.bashrc 
+		conda init bash
+
+		#Activate conda environment
+		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
+            	conda activate checkm_v1.2.2
 
                 #Run checkm qa for every ID
-                while IFS= read -r line; do
-                        checkm qa -o 2 -f {output_features}/bins/$line/$line-qa.txt {output_features}/lineage.ms {output_features}
-                done < files.txt
+                checkm qa -o 2 -f {output.checkm_qa} {output_features}/lineage.ms {output_features}
 		'
 		"""
 
 rule gene_families_emapper:
 	input:
-		checkm="{output_features}/bins"
+		checkm="{output_features}/bins/{id}/genes.faa"
 	output:
-		emapper=directory("{output_features}/proteins_emapper")
+		emapper=directory("{output_features}/proteins_emapper/{id}")
 	params:
 		t=threads_emapper,
 		e=emapper_seed_ortholog_evalue,
@@ -182,37 +201,31 @@ rule gene_families_emapper:
                 source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
                 conda activate eggnog-mapper_v2.1.11
 
-		if [ ! -d "{output_features}/protein_emapper" ]; then 
+		if [ ! -d "{output_features}/proteins_emapper" ]; then 
 			mkdir "{output_features}/proteins_emapper"
 		fi
+		
+		if [ ! -d "{output_features}/proteins_emapper/{wildcards.id}" ]; then 
+			mkdir "{output_features}/proteins_emapper/{wildcards.id}"
+		fi
 
-                #Run eggnog emapper
-                while IFS= read -r line; do
-
-			#Create folder for line/ID
-			if [ ! -d "{output.emapper}/$line" ]; then 
-				mkdir "{output.emapper}/$line"
-			fi
-                	#Substitute emapper run for a backup files copy (for debugging)
-	                #cp -r backup_proteins_emapper/$line {output_features}/proteins_emapper/.
-                	emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o $line --output_dir {output.emapper}/$line -m diamond -i {output_features}/bins/$line/genes.faa --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
-                done < files.txt
+		#Substitute emapper run for a backup files copy (for debugging)
+	        #cp -r backup_proteins_emapper/{wildcards.id} {output_features}/proteins_emapper/.
+                emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
                 '
                 """	
 
-
-
 rule gene_families_table:
-        input:
-                emapper="{output_features}/proteins_emapper"
-        output:
-                gene_profiles="{output_features}/gene-family_profiles.csv"
+	input:
+		emapper=expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
+	output:
+		gene_profiles="{output_features}/gene-family_profiles.csv"
 #       conda:
 #               "checkm_v1.2.2.yaml"
 #               "checkm_v1.2.2"
-        shell:
-                r"""
-                bash -c '
+	shell:
+		r"""
+		bash -c '
                 . $HOME/.bashrc
                 conda init bash
                 source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
