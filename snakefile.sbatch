@@ -5,7 +5,7 @@
 #SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=40
-#SBATCH --partition=gpu
+#SBATCH --partition=standard
 #SBATCH --mem=240G
 
 # Load any necessary modules if needed

@@ -69,8 +69,10 @@ for line in fh_in:
 #For instance, to obtain gene-family_profiles.csv, Snakefile needs to run: 1) genes_checkm -> 2) gene_families_emapper -> 3) gene_families_table. So, do not add the "intermediate" outputs of 1 or 2, but rather only the output of 3.
 rule all:
 	input: 
-		#kmers
-		expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
+		#kmers_gerbil
+		#expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
+		#kmers_table
+		expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
 		#genes_checkm_lineage
 		#expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
 		#genes_checkm_qa
@@ -80,10 +82,10 @@ rule all:
 		#gene_families_table
 		expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
 		#isoelectric_point
-		expand("{output_features}/isoelectric_point_files", id=genomeID_lst, output_features=output_features)
+		expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
 
 #Rule to generate k-mer counts using Gerbil and formatting the output
-rule kmers:
+rule kmers_gerbil:
 	input:
 		genome="genomes/{id}.fasta"
 	output:
@@ -105,7 +107,18 @@ rule kmers:
 
 		#Gerbil
 	        /home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -t {params.t} -k {params.k} -l 1 -o fasta {input.genome} temp {output.kmers}
+        	"""
 
+#Rule to generate a table from the k-mer counts
+rule kmers_table:
+	input:
+		kmers=expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, output_features=output_features, K=K)
+	output:
+		"{output_features}/kmer{K}_profiles.tsv"
+	params:
+		k=K
+	shell:
+		r"""
 		#Create list of files
       	  	ls -lh {output_features}/kmer_files/*kmer{params.k}.txt | sed 's/  */\t/g' | cut -f9 | sed 's/{output_features}\/kmer_files\///g' | sed 's/_kmer{params.k}.txt//g' > list_kmer{params.k}_files.txt
 		
@@ -240,17 +253,12 @@ rule gene_families_table:
 
 rule isoelectric_point:
 	input:
-		checkm="{output_features}/bins"
+		checkm="{output_features}/bins/{id}/genes.faa"
 	output:
-		isoelectric_point=directory("{output_features}/isoelectric_point_files")
+		isoelectric_point="{output_features}/isoelectric_point_files/{id}-iso_point.csv"
 	shell:
 		r"""
 		bash -c '
-		#Create output folder if it has not been done before
-		if [ ! -d {output_features} ]; then 
-			mkdir {output_features}
-		fi
-
             	. $HOME/.bashrc 
 		conda init bash
 	        # Activate the python3 environment
@@ -261,37 +269,34 @@ rule isoelectric_point:
            		mkdir {output_features}/isoelectric_point_files
 		fi
 
-                while IFS= read -r line; do
-			#Create tmp folder
-        		mkdir "tmp_$line"
+		#Create output folder
+		if [ ! -d tmp_{wildcards.id} ]; then 
+           		mkdir tmp_{wildcards.id}
+		fi
 
-			#Split genes.faa
-			bash {scripts}/split_protein_file.sh {input.checkm}/$line/genes.faa "tmp_$line"
+		#Split genes.faa
+		bash {scripts}/split_protein_file.sh {output_features}/bins/{wildcards.id}/genes.faa tmp_{wildcards.id}
 
-			#Enter in folder to avoid producing many tmp files in main folder
-			counter=1
+		#Enter in folder to avoid producing many tmp files in main folder
+		counter=1
 
-			(cd "tmp_$line"
-			#Loop for each split file to calculate isoelectric point
-			for file in ./*faa; do
-				python3 {scripts}/emboss_pepstats.py --email jena@email.de --sequence "$file" --quiet
-				mv emboss*.out.txt "emboss$counter.out"
-				((counter++))
-			done
-			cd ..
-			)
+		(cd tmp_{wildcards.id}
+		#Loop for each split file to calculate isoelectric point
+		for file in ./*faa; do
+			python3 {scripts}/emboss_pepstats.py --email jena@email.de --sequence "$file" --quiet --outfile {wildcards.id}-"$counter"
+			((counter++))
+		done
+		cd ..
+		)
 
-			#Remove unnecessary output from emboss
-			rm tmp_$line/emboss*.sequence.txt
-			rm tmp_$line/emboss*.submission.params
+		#Cat all outputs into one file
+		cat tmp_{wildcards.id}/{wildcards.id}*.out.txt > {output_features}/isoelectric_point_files/{wildcards.id}-emboss.out
 
-			#Cat all outputs into one file
-			cat tmp_$line/emboss*.out > tmp_$line/tmp_emboss_all.out
+		#Extract protein names and isoelectric points and save into output file 
+		python3 {scripts}/extract_isoeletric-point.py {output_features}/isoelectric_point_files/{wildcards.id}-emboss.out > {output_features}/isoelectric_point_files/{wildcards.id}-iso_point.csv
 
-			#Extract protein names and isoelectric points and save into output file 
-			python3 {scripts}/extract_isoeletric-point.py tmp_$line/tmp_emboss_all.out > {output.isoelectric_point}/$line-iso_point.csv
-			rm -r tmp_$line 
-                done < files.txt
+		#Remove unnecessary output from emboss
+		rm -r tmp_{wildcards.id} 
 		'
 		"""
 
