@@ -6,7 +6,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=40
 #SBATCH --partition=standard
-#SBATCH --mem=240G
+#SBATCH --mem=40G
 
 # Load any necessary modules if needed
 module purge
