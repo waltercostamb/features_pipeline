@@ -94,11 +94,15 @@ snakemake --use-conda --cores 1 --configfile config.json --snakefile /home/no58r
 ```
 ## Run specific rules
 
-The default mode of Snakefile is to run all rules. If you want to run a specific rule, open Snakefile, uncomment the command line(s) referring to the desired feature(s) and comment the other lines.
+The default mode of Snakefile is to run all rules. If you want to run a specific rule: copy the Snakefile to the folder you are running your samples, uncomment the command line(s) referring to the desired feature(s) and comment the other lines. Then adapt your snakemake.sbatch file and run it. 
 
 # Available features
 
-A directed acyclic graph (DAG) is shown for each feature. It describes the pipeline's hierarchy of rules.  
+A directed acyclic graph (DAG) is shown for each feature. It describes the pipeline's hierarchy of rules. Below you see a simplified DAG with all implemented rules for one input genome.
+
+<p align="center">
+  <img src="./figures/DAG_features_pipeline.png" alt="Alt Text" width="550"/>
+</p>
 
 ## kmers
 
