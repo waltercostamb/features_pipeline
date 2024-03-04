@@ -1,6 +1,6 @@
 # Features pipeline
 
-This pipeline extracts features from bacterial genomes. Here you can learn how to use the pipeline with an example and with your data. 
+This pipeline extracts features from bacterial genomes, such as kmers and gene orthologs. In this tutorial, you will learn how to use the pipeline with the example input provided in folder *genomes*. After learning how to use the pipeline, you can use it with your own data. 
 
 <p align="center">
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="550"/>
@@ -28,7 +28,7 @@ kmer9_profiles.tsv
 
 ## Example data
 
-To learn how to use the pipeline, run it for the example files provided in this repository. 
+To learn how to use the pipeline, run it first for the example files provided in this repository. 
 
 ## Draco HPC of the Friedrich-Schiller University Jena
 
@@ -44,7 +44,9 @@ cp /home/no58rok/features_pipeline/files.txt .
 
 ## Another cluster
 
-If you are using this pipeline in another cluster, you should first git clone this repository:
+If you are using this pipeline in another cluster, perform the following steps:
+
+- git clone this repository
 
 ```
 #Clone using https
@@ -54,13 +56,13 @@ git clone git@github.com:waltercostamb/features_pipeline.git
 #If neither https nor ssh work, ask your cluster manager on how to best clone a GIT repository
 ```
 
-After cloning, access the file Snakefile with your editor of choice (such as nano or vim) and do the following:
-
-- uncomment the line below of rule all (~line 79)
+- After cloning the repository, access the file *Snakefile* with your editor of choice (such as nano or vim) and do the following:
+- Uncomment the line below of **rule all** (line 79)
+- 
 ```
 expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features=output_features)
 ```
-- comment all other lines of rule all, so that they look like below:
+- Comment all other lines of **rule all** (lines 75, 81, 85 and 87), so that rule all looks like below:
 
 ```
 rule all:
@@ -83,7 +85,16 @@ rule all:
                 #expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
 ```
 
-Finally, you can just run the pipeline for testing as below:
+- Save the modifications you made in file *Snakefile* and quit the editor
+
+- Create *files.txt* with the list of the input files provided in the repository:
+
+```
+ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
+```
+
+- Activate the snakemake environment of your cluster. Consult your cluster manager for that.   
+- Run the pipeline with the provided input as below:
 
 ```
 snakemake --use-conda --cores 1 --configfile config.json --snakefile Snakefile
