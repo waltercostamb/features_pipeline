@@ -58,7 +58,7 @@ git clone git@github.com:waltercostamb/features_pipeline.git
 
 - After cloning the repository, access the file *Snakefile* with your editor of choice (such as nano or vim) and do the following:
 - Uncomment the line below of **rule all** (line 79)
-- 
+  
 ```
 expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features=output_features)
 ```
