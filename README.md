@@ -29,7 +29,10 @@ kmer9_profiles.tsv
 ## Example data
 
 To learn how to use the pipeline, run it for the example files provided in this repository. 
-First, copy the folder *genomes/* to the path you wish to run the pipeline. Copy the config and sbatch files as well:
+
+## Draco HPC of the Friedrich-Schiller University Jena
+
+If you are using this pipeline in draco, first, copy the folder *genomes/* to the path you wish to run the pipeline. Copy the config and sbatch files as well:
 
 ```
 cd PATH
@@ -39,7 +42,54 @@ cp /home/no58rok/features_pipeline/snakefile.sbatch .
 cp /home/no58rok/features_pipeline/files.txt .
 ```
 
-## Your data
+## Another cluster
+
+If you are using this pipeline in another cluster, you should first git clone this repository:
+
+```
+#Clone using https
+git clone https://github.com/waltercostamb/features_pipeline.git
+#Alternative to https: clone using ssh
+git clone git@github.com:waltercostamb/features_pipeline.git
+#If neither https nor ssh work, ask your cluster manager on how to best clone a GIT repository
+```
+
+After cloning, access the file Snakefile with your editor of choice (such as nano or vim) and do the following:
+
+- uncomment the line below of rule all (~line 79)
+```
+expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features=output_features)
+```
+- comment all other lines of rule all, so that they look like below:
+
+```
+rule all:
+        input:
+                #kmers_gerbil
+                #expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
+                #kmers_table
+                #expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
+                #genes_checkm_lineage
+                #expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
+                #genes_checkm_lineage_yaml
+                expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features=output_features)
+                #genes_checkm_qa
+                #expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
+                #gene_families_emapper
+                #expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
+                #gene_families_table
+                #expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
+                #isoelectric_point
+                #expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
+```
+
+Finally, you can just run the pipeline for testing as below:
+
+```
+snakemake --use-conda --cores 1 --configfile config.json --snakefile Snakefile
+```
+
+## Using your data
 
 To use the pipeline with your own data, do the following:
 
@@ -79,15 +129,16 @@ or:
 - Allocate a node
 - run Snakemake directly in the command line, as below
 
-Importantly, some of the required software (such as CheckM) do not run in the standard node, since they require more memory. Use gpu or fat.
+Importantly, some of the required software (such as CheckM) require more memory, so make sure to allocate enough of it.
 
 ```
 #Allocate a node
 salloc -p gpu --gres=gpu:1 
 salloc -p fat -N 1
 
-#Activate Snakemake
+#Activate Snakemake in HPC draco
 source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate snakemake_v7.24.0
+#Alternatively, Activate Snakemake in your server according to your manager's orientations
 
 #Run snakemake
 snakemake --use-conda --cores 1 --configfile config.json --snakefile /home/no58rok/features_pipeline/Snakefile
