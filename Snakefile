@@ -75,6 +75,8 @@ rule all:
 		expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
 		#genes_checkm_lineage
 		#expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
+		#genes_checkm_lineage_yaml
+		#expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features=output_features)
 		#genes_checkm_qa
 		expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
 		#gene_families_emapper
@@ -136,7 +138,7 @@ rule kmers_table:
 		rm list_kmer{params.k}_files.txt
         	"""
 
-#Rule to run checkm lineage_wf 
+#Rule to run checkm lineage_wf using shell
 rule genes_checkm_lineage:
 	input:
 		genome_folder=expand("genomes"),
@@ -146,8 +148,7 @@ rule genes_checkm_lineage:
 	params:
 		t=threads_checkm
 ##	conda:
-##		"checkm_v1.2.2.yaml"
-##		"checkm_v1.2.2"
+##		checkm_smk.yml
 	shell:
 		r"""
 		bash -c '
@@ -169,6 +170,28 @@ rule genes_checkm_lineage:
                 #cp -r checkm_output/bins {output_features}/.
                 #cp -r checkm_output/lineage.ms {output_features}/.
 		'
+		"""
+
+#Rule to run checkm lineage_wf using a YAML file instead of the shell
+rule genes_checkm_lineage_yaml:
+	input:
+		genome_folder=expand("genomes"),
+		genomes=expand("genomes/{id}.fasta",id=genomeID_lst)
+	output:
+		checkm=expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features=output_features)
+	params:
+		t=threads_checkm
+	conda:
+		"checkm_smk.yml"
+	shell:
+		"""
+		#Create output folder if it has not been done before
+		if [ ! -d {output_features} ]; then 
+			mkdir {output_features}
+		fi
+
+                #Run checkm lineage_wf
+                checkm lineage_wf -t {params.t} -x fasta {input.genome_folder} {output_features}
 		"""
 
 #Rule to run checkm_qa 
