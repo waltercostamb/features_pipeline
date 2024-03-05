@@ -97,7 +97,7 @@ ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$'
 - Run the pipeline with the provided input as below:
 
 ```
-snakemake --use-conda --cores 1 --configfile config.json --snakefile Snakefile
+snakemake --use-conda --cores 3 --configfile config.json --snakefile Snakefile
 ```
 
 ## Using your data
@@ -152,7 +152,7 @@ source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate
 #Alternatively, Activate Snakemake in your server according to your manager's orientations
 
 #Run snakemake
-snakemake --use-conda --cores 1 --configfile config.json --snakefile /home/no58rok/features_pipeline/Snakefile
+snakemake --use-conda --cores 3 --configfile config.json --snakefile /home/no58rok/features_pipeline/Snakefile
 ```
 ## Run specific rules
 
