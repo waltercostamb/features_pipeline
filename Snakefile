@@ -63,9 +63,9 @@ for line in fh_in:
 
 
 
-#This rule is the default target rule. 
-#You should only add the final target file/directory per feature, otherwise it gives errors, since
-# there is an order of execution
+#Thi is the default target rule. 
+#You should only add the final target (file/directory) per feature, otherwise it gives errors, due
+# to the order of execution from snakemake
 #For instance, to obtain gene-family_profiles.csv, Snakefile needs to run: 1) genes_checkm -> 2) gene_families_emapper -> 3) gene_families_table. So, do not add the "intermediate" outputs of 1 or 2, but rather only the output of 3.
 rule all:
 	input: 
@@ -86,7 +86,7 @@ rule all:
 		#isoelectric_point
 		expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
 
-#Rule to generate k-mer counts using Gerbil and formatting the output
+#Rule to generate k-mer counts using Gerbil
 rule kmers_gerbil:
 	input:
 		genome="genomes/{id}.fasta"
@@ -107,8 +107,8 @@ rule kmers_gerbil:
            		mkdir {output_features}/kmer_files
 		fi
 
-		#Gerbil
-	        /home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -t {params.t} -k {params.k} -l 1 -o fasta {input.genome} temp {output.kmers}
+		#Run Gerbil
+	        /home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -t {params.t} -k {params.k} -l 1 -o fasta {input.genome} {wildcards.id} {output.kmers}
         	"""
 
 #Rule to generate a table from the k-mer counts
