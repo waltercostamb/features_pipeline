@@ -72,19 +72,21 @@ rule all:
 		#kmers_gerbil
 		#expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
 		#kmers_table
-		expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
+#		expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
 		#genes_checkm_lineage
 		#expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
 		#genes_checkm_lineage_yaml
 		#expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features=output_features)
 		#genes_checkm_qa
-		expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
+#		expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
 		#gene_families_emapper
 		#expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
 		#gene_families_table
-		expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
+#		expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
 		#isoelectric_point
-		expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
+		#expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
+		#isoelectric_point_table
+		expand("{output_features}/isoelectric_point-profiles.csv", id=genomeID_lst, output_features=output_features)
 
 #Rule to generate k-mer counts using Gerbil
 rule kmers_gerbil:
@@ -273,7 +275,6 @@ rule gene_families_table:
                 '
                 """
 
-
 rule isoelectric_point:
 	input:
 		checkm="{output_features}/bins/{id}/genes.faa"
@@ -322,6 +323,27 @@ rule isoelectric_point:
 		rm -r tmp_{wildcards.id} 
 		'
 		"""
+
+rule isoelectric_point_table:
+	input:
+		isoelectric_point=expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features),
+		emapper=expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
+	output:
+		iso_profiles="{output_features}/isoelectric_point-profiles.csv"
+	shell:
+		r"""
+		bash -c '
+                . $HOME/.bashrc
+                conda init bash
+                source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
+                # Activate the python3 environment
+                conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
+                
+                #Run script to make a table out of the EMBOSS stats output from rule isoelectric_point
+                python3 {scripts}/iso-point_table.py files.txt {output_features}/isoelectric_point_files/ {output_features}/
+                '
+                """
+
 
 #rule pfam:
 #	input:
