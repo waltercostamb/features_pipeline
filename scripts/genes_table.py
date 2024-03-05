@@ -35,7 +35,7 @@ output_folder = sys.argv[3]
 file_of_list_files = sys.argv[1]
 
 #Load list of files given in the command line
-list_files = pd.read_csv(f'{file_of_list_files}', header = None)
+list_files = pd.read_csv(f'{file_of_list_files}', header = None, dtype=str)
 list_files = list_files[0].tolist()
 
 cog2presence = {}
@@ -47,6 +47,7 @@ print("Processing files...", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H
 #For each file, extract the 5th col. for every line/protein (eggNOG_OGs), create matrix presence/absence of orthologs
 for file_name in list_files:
     
+    #print(file_name)
     #Keep track of script, print processing of every 5th file
     #if(line %50 == 0):
     #    ts = time.time() 
