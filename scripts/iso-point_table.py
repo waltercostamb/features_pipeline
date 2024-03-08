@@ -42,6 +42,7 @@ input_folder_iso = sys.argv[4]
 list_files = pd.read_csv(f'{file_of_list_files}', header = None, dtype=str)
 list_files = list_files[0].tolist()
 
+print()
 ts = time.time() 
 print("Creating dictionary of protein names and isoelectric points...", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
 
@@ -72,14 +73,18 @@ for filename in list_files:
         if prot_name not in name2point[filename]:
             name2point[filename][prot_name] = iso_point
 
-#print(name2point)
+#print(name2point['1266999'])
 
 ts = time.time() 
 print("Processing files...", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
 
+#Initialize dictionaries
 cog2presence = {}
+name2cog = {}
+
 line = 0
 
+#Create dictionary of cog2presence (isoelectric points of known genes, or, those that could be annotated by eggNOG emapper)
 #For each file, extract the 5th col. for every line/protein (eggNOG_OGs), create matrix of orthologs, add isoelectric point of protein to fill the matrix
 for file_name in list_files:
     
@@ -124,7 +129,10 @@ for file_name in list_files:
         
             #remove extra string from 2nd element
             cog = cog_lst[1].replace('root,', '')
-        
+
+            #Populate dictionary with COG and gene name. This will be used in the following code block
+            name2cog[prot_name] = cog
+
             id_file = file_name
             #print(cog_full_el,id_file)
         
@@ -141,18 +149,47 @@ for file_name in list_files:
                 cog2presence[cog] = {id_file: iso_point}
                 
     line = line + 1 
-    
+   
 ts = time.time() 
 print("Data in dictionary", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
 
+#Create a second dictionary, similar to cog2presence, but with all genes, not only those annotated by eggNOG emapper (or, those that contain a COG)
+all2presence = cog2presence.copy()
+
+#Further populate dictionary all2presence to contain isoelectric points of all genes, including those NOT annotated by eggNOG emapper
+#First, go through every file_name
+for file_name in list_files:
+
+    #print(file_name)
+    #print(name2point['1266999'])
+    
+    #Afterwards, go through every protein name of file $ID-iso_point.csv
+    for prot_name, point in name2point[file_name].items():
+
+        #Check if this name has a COG. If NOT, add element to dictionary
+        if prot_name not in name2cog:
+
+            iso_point = name2point[file_name][prot_name]
+            #Add element
+            all2presence[prot_name] = {file_name: iso_point} 
+
+ts = time.time() 
+print("Included proteins without COG annotation to second dictionary", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
+
 #Convert to dataframe
 df_cog = pd.DataFrame.from_dict(cog2presence, orient='index')
+df_all = pd.DataFrame.from_dict(all2presence, orient='index')
 
 ts = time.time() 
-print("Data in dataframe", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
+print("Data in dataframes", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
 
-#Save the dataframe to a CSV file
-df_cog.to_csv(output_folder + 'iso-points_profiles' + '.csv', index=True)
+#Save the dataframes to two CSV files
+df_cog.to_csv(output_folder + 'iso-points_profiles_known_orthologs' + '.csv', index=True)
+df_all.to_csv(output_folder + 'iso-points_profiles_all_genes' + '.csv', index=True)
 
 ts = time.time() 
-print("Data saved in file", output_folder +"iso-points_profiles.csv", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
+print("Data 1 saved in file", output_folder +"iso-points_profiles_known_orthologs.csv", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
+print("Data 2 saved in file", output_folder +"iso-points_profiles_all_genes.csv", datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S'))
+print()
+
+

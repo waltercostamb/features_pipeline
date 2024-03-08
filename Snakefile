@@ -86,7 +86,7 @@ rule all:
 		#isoelectric_point
 		#expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
 		#isoelectric_point_table
-		expand("{output_features}/isoelectric_point-profiles.csv", id=genomeID_lst, output_features=output_features)
+		expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features)
 
 #Rule to generate k-mer counts using Gerbil
 rule kmers_gerbil:
@@ -286,7 +286,7 @@ rule isoelectric_point:
             	. $HOME/.bashrc 
 		conda init bash
 	        # Activate the python3 environment
-		conda activate bacterial_phenotypes
+                conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
 		
 		#Create output folder
 		if [ ! -d {output_features}/isoelectric_point_files ]; then 
@@ -329,7 +329,7 @@ rule isoelectric_point_table:
 		isoelectric_point=expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features),
 		emapper=expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
 	output:
-		iso_profiles="{output_features}/isoelectric_point-profiles.csv"
+		iso_profiles="{output_features}/iso-points_profiles_known_orthologs.csv"
 	shell:
 		r"""
 		bash -c '
@@ -340,7 +340,7 @@ rule isoelectric_point_table:
                 conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
                 
                 #Run script to make a table out of the EMBOSS stats output from rule isoelectric_point
-                python3 {scripts}/iso-point_table.py files.txt {output_features}/isoelectric_point_files/ {output_features}/
+                python3 {scripts}/iso-point_table.py {genomes} {output_features}/proteins_emapper/ {output_features}/ {output_features}/isoelectric_point_files/
                 '
                 """
 
