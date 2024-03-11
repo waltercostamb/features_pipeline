@@ -72,17 +72,17 @@ rule all:
 		#kmers_gerbil
 		#expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
 		#kmers_table
-#		expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
+		expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
 		#genes_checkm_lineage
 		#expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
 		#genes_checkm_lineage_yaml
 		#expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features=output_features)
 		#genes_checkm_qa
-#		expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
+		expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
 		#gene_families_emapper
 		#expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
 		#gene_families_table
-#		expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
+		expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
 		#isoelectric_point
 		#expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
 		#isoelectric_point_table
