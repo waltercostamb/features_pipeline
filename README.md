@@ -172,6 +172,18 @@ Time performance            |  Memory performance
 :-------------------------:|:-------------------------:
 ![](./figures/performance_plot1_features_pipeline.png)  |  ![](./figures/performance_plot2_features_pipeline.png)
 
+*CheckM lineage_wf* is required for the following rules: *isoelectric_point*, *genes_checkm_lineage* and *checkM_qa*. It is the most memory demanding process, causing the memory requirements to be the same for these three rules.  
+
+Aditionally, the run time to calculate the isoelectric points (IP) per file is on average 2min 10sec. This was calculated as the average run time of 500 files. In addition to calculating the IPs, the rule *isoelectric_point* also requires *CheckM lineage_wf*.  
+
+The run time to calculate qa reports with *CheckM qa* is on average 6min 7sec. This was calculated as the average run time of 160 files. Similarly as for rule *isoelectric_point*, the rule *checkM_qa* also requires *CheckM lineage_wf*.  
+
+The run time to calculate EggNOG emapper reports is on average 12min. This was calculated as the average run time of 250 files. The rule *genes_checkm_lineage* also requires *CheckM lineage_wf*. Below follows an example of how this information can be used to calculate run time:
+
+- 1 file = 12 min follows that: 13,554 files = 162,660 min (or 113 days for 1 core)
+- Parallelizing the pipeline into 40 cores = 2,83 days
+- To run the complete rule *genes_checkm_lineage*, 2,83 days are required plus the *CheckM lineage_wf* run time (~3 days) = 6 days
+
 ## kmers
 
 kmers are sub-sequences of a genome. Kmers have length k, which can be defined by the user. The default is 9. If you want a different k, change it in file config.json. Kmers are calculated with Gerbil. An in-house script creates a table with kmers per file ID. Rule: kmers.
