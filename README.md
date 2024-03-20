@@ -166,6 +166,12 @@ A directed acyclic graph (DAG) is shown for each feature. It describes the pipel
   <img src="./figures/DAG_features_pipeline.png" alt="Alt Text" width="550"/>
 </p>
 
+Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters, with the exception of "emapper_block_size", which was set to a higher value of 10.0.
+
+<p align="center">
+  <img src="./figures/performance_plot1_features_pipeline.png" alt="Alt Text" width="550"/>
+</p>
+
 ## kmers
 
 kmers are sub-sequences of a genome. Kmers have length k, which can be defined by the user. The default is 9. If you want a different k, change it in file config.json. Kmers are calculated with Gerbil. An in-house script creates a table with kmers per file ID. Rule: kmers.
