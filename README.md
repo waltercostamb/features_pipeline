@@ -168,9 +168,9 @@ A directed acyclic graph (DAG) is shown for each feature. It describes the pipel
 
 Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters, with the exception of "emapper_block_size", which was set to a higher value of 10.0.
 
-<p align="center">
-  <img src="./figures/performance_plot1_features_pipeline.png" alt="Alt Text" width="550"/>
-</p>
+Time performance            |  Memory performance
+:-------------------------:|:-------------------------:
+![](./figures/performance_plot1_features_pipeline.png)  |  ![](./figures/performance_plot2_features_pipeline.png)
 
 ## kmers
 
