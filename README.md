@@ -93,7 +93,7 @@ rule all:
 ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
 ```
 
-- Activate the snakemake environment of your cluster. Consult your cluster manager for that.   
+- Activate the snakemake environment of your cluster. For installation, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html. Alternatively, consult your cluster manager.   
 - Run the pipeline with the provided input as below:
 
 ```
