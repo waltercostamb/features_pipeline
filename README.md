@@ -164,14 +164,6 @@ snakemake --use-conda --cores 3 --configfile config.json --snakefile /home/no58r
 
 The default mode of Snakefile is to run all rules. If you want to run a specific rule: copy the Snakefile to the folder you are running your samples, uncomment the command line(s) referring to the desired feature(s) and comment the other lines. Then adapt your snakemake.sbatch file and run it. 
 
-# Available features
-
-A directed acyclic graph (DAG) is shown for each feature. It describes the pipeline's hierarchy of rules. Below you see a simplified DAG with all implemented rules for one input genome.
-
-<p align="center">
-  <img src="./figures/DAG_features_pipeline.png" alt="Alt Text" width="550"/>
-</p>
-
 # Performance
 
 Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters, with the exception of "emapper_block_size", which was set to a higher value of 10.0. The default value of EggNOG emapper's "emapper_block_size" is 2.0. Increasing this value to 10.0 increases memory consumption, but reduces run time.  
@@ -191,6 +183,14 @@ The run time to calculate EggNOG emapper reports is on average 12min. This was c
 - 1 file = 12 min follows that: 13,554 files = 162,660 min (or 113 days for 1 core)
 - Parallelizing the pipeline into 40 cores = 2,83 days
 - To run the complete rule *genes_checkm_lineage*, 2,83 days are required plus the *CheckM lineage_wf* run time (~3 days) = 6 days
+
+# Available features
+
+A directed acyclic graph (DAG) is shown for each feature. It describes the pipeline's hierarchy of rules. Below you see a simplified DAG with all implemented rules for one input genome.
+
+<p align="center">
+  <img src="./figures/DAG_features_pipeline.png" alt="Alt Text" width="550"/>
+</p>
 
 ## kmers
 
