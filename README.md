@@ -6,11 +6,16 @@ This pipeline extracts features from bacterial genomes, such as kmers and gene o
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="550"/>
 </p>
 
-# Usage 
+# Using the pipeline
 
-## Example data
+The first step to learn how to use the pipeline is to clone the repository in your high-performance cluster:
 
-To learn how to use the pipeline, run it first for the example files provided in this repository.  
+```
+#Clone using https
+git clone https://github.com/waltercostamb/features_pipeline.git
+```
+
+To learn how to use the pipeline, run it with the example provided in this repository.  
 
 Example input:  
 
@@ -32,29 +37,16 @@ kmer9_profiles.tsv
 
 ## Draco HPC of the Friedrich-Schiller University Jena
 
-If you are using this pipeline in draco you have two options:
+If you are using this pipeline in draco, you do not need to do any extra steps, since the conda environments are already installed.
 
-- Clone the repository:
-
-```
-#Clone using https
-git clone https://github.com/waltercostamb/features_pipeline.git
-```
-
-- Copy the pipeline folder to your home or work folder:
-
-```
-cd PATH
-cp -r /work/groups/VEO/shared_data/features_pipeline .
-```
-
-## Another cluster
+## Other HPCs
 
 If you are using this pipeline in another cluster, perform the steps below. You will need to comment and uncomment some lines of code for testing conda environments outside of the draco cluster. After your tests, we will improve the pipeline and its handling of conda environments.  
 
 - git clone this repository
 
 ```
+cd PATH
 #Clone using https
 git clone https://github.com/waltercostamb/features_pipeline.git
 #Alternative to https: clone using ssh
@@ -106,30 +98,6 @@ ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$'
 snakemake --use-conda --cores 3 --configfile config.json --snakefile Snakefile
 ```
 
-## Using your data
-
-To use the pipeline with your own data, do the following:
-
-- Make sure the directory which contains your bacterial genomes (or contigs) is named *genomes* (in lowercase)
-- Make sure the FASTA files have the extension *.fasta*
-  - the pipeline assumes your files are named in the following way: FILE\_ID.fasta
-- Create *files.txt* containing the FILE\_IDs you want to run through the pipeline:
-
-```
-ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
-```
-
-- Adapt the config and/or sbatch files if needed:
-
-```
-#Copy original files
-cp /work/groups/VEO/shared_data/features_pipeline/config.json .
-cp /work/groups/VEO/shared_data/features_pipeline/snakefile.sbatch .
-#Adapt files if needed
-vim config.json
-vim snakefile.sbatch
-```
-
 ## Run the pipeline
 
 To run the pipeline, you can either allocate a node and run the pipeline directly on the command line or submit a job to the slurm queueing system. We recommend you to allocate a node only for testing and to submit a job to the queue to run your final pipeline. Importantly, some of the required software (such as CheckM) require more memory, so make sure to allocate enough of it in your *snakefile.sbatch* file (more details in the following section "Performance"). For the example files, a standard node is enough.
@@ -158,6 +126,30 @@ source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate
 
 #Run snakemake
 snakemake --use-conda --cores 3 --configfile config.json --snakefile /home/no58rok/features_pipeline/Snakefile
+```
+
+## Using your data
+
+To use the pipeline with your own data:
+
+- Make sure the directory which contains your bacterial genomes (or contigs) is named *genomes* (in lowercase)
+- Make sure the FASTA files have the extension *.fasta*
+  - the pipeline assumes your files are named in the following way: FILE\_ID.fasta
+- Create *files.txt* containing the FILE\_IDs you want to run through the pipeline:
+
+```
+ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
+```
+
+- Copy and (if needed) adapt the config and/or sbatch files:
+
+```
+#Copy original files
+cp PATH/features_pipeline/config.json .
+cp PATH/features_pipeline/snakefile.sbatch .
+#Adapt files if needed
+vim config.json
+vim snakefile.sbatch
 ```
 
 ## Run specific rules
