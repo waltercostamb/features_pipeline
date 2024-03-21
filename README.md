@@ -6,40 +6,19 @@ This pipeline extracts features from bacterial genomes, such as kmers and gene o
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="550"/>
 </p>
 
-# Using the pipeline
+# Cloning the repository
 
-The first step to learn how to use the pipeline is to clone the repository in your high-performance cluster:
+The first step to use the pipeline is to clone the GIT repository in your high-performance cluster:
 
 ```
 #Clone using https
 git clone https://github.com/waltercostamb/features_pipeline.git
 ```
-
-To learn how to use the pipeline, run it with the example provided in this repository.  
-
-Example input:  
-
-```
-$ls genomes/
-1266999.fasta  743966.fasta  GCA_900660695.fasta
-```
-
-Example output of the kmer rule:
-
-```
-#Individual kmer profiles
-$ls output/kmer_files/ 
-1266999_kmer9.txt  743966_kmer9.txt  GCA_900660695_kmer9.txt
-#TSV file combining all profiles
-$ls output/
-kmer9_profiles.tsv
-```
-
-## Draco HPC of the Friedrich-Schiller University Jena
+## Working on draco HPC of the Friedrich-Schiller University Jena
 
 If you are using this pipeline in draco, you do not need to do any extra steps, since the conda environments are already installed.
 
-## Other HPCs
+## Working on other HPCs
 
 If you are using this pipeline in another cluster, perform the steps below. You will need to comment and uncomment some lines of code for testing conda environments outside of the draco cluster. After your tests, we will improve the pipeline and its handling of conda environments.  
 
@@ -98,8 +77,30 @@ ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$'
 snakemake --use-conda --cores 3 --configfile config.json --snakefile Snakefile
 ```
 
-## Run the pipeline
+# Usage
 
+To learn how to use the pipeline, run it with the examples provided in this repository.  
+
+Example input:  
+
+```
+$ls genomes/
+1266999.fasta  743966.fasta  GCA_900660695.fasta
+```
+
+If you run the example input, you will obtain their kmer profiles, gene families, checkm qa reports and isoelectric points of proteins. The output of the kmer rule follows:
+
+```
+#Individual kmer profiles
+$ls output/kmer_files/ 
+1266999_kmer9.txt  743966_kmer9.txt  GCA_900660695_kmer9.txt
+#TSV file combining all profiles
+$ls output/
+kmer9_profiles.tsv
+```
+
+To run the examples, use the provided scripts without any changes following the instructions below.   
+ 
 To run the pipeline, you can either allocate a node and run the pipeline directly on the command line or submit a job to the slurm queueing system. We recommend you to allocate a node only for testing and to submit a job to the queue to run your final pipeline. Importantly, some of the required software (such as CheckM) require more memory, so make sure to allocate enough of it in your *snakefile.sbatch* file (more details in the following section "Performance"). For the example files, a standard node is enough.
 
 - Submit an sbatch file to the slurm queueing system, as if the *Snakefile* would be a usual script:
@@ -145,6 +146,7 @@ ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$'
 
 ```
 #Copy original files
+cp PATH/features_pipeline/Snakefile .
 cp PATH/features_pipeline/config.json .
 cp PATH/features_pipeline/snakefile.sbatch .
 #Adapt files if needed
