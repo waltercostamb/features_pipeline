@@ -6,6 +6,12 @@ This pipeline extracts features from bacterial genomes, such as kmers and gene o
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="550"/>
 </p>
 
+# Usage 
+
+## Example data
+
+To learn how to use the pipeline, run it first for the example files provided in this repository.  
+
 Example input:  
 
 ```
@@ -24,27 +30,27 @@ $ls output/
 kmer9_profiles.tsv
 ```
 
-# Usage 
-
-## Example data
-
-To learn how to use the pipeline, run it first for the example files provided in this repository. 
-
 ## Draco HPC of the Friedrich-Schiller University Jena
 
-If you are using this pipeline in draco, first, copy the folder *genomes/* to the path you wish to run the pipeline. Copy the config and sbatch files as well:
+If you are using this pipeline in draco you have two options:
+
+- Clone the repository:
+
+```
+#Clone using https
+git clone https://github.com/waltercostamb/features_pipeline.git
+```
+
+- Copy the pipeline folder to your home or work folder:
 
 ```
 cd PATH
-cp -r /home/no58rok/features_pipeline/genomes .
-cp /home/no58rok/features_pipeline/config.json .
-cp /home/no58rok/features_pipeline/snakefile.sbatch .
-cp /home/no58rok/features_pipeline/files.txt .
+cp -r /work/groups/VEO/shared_data/features_pipeline .
 ```
 
 ## Another cluster
 
-If you are using this pipeline in another cluster, perform the following steps:
+If you are using this pipeline in another cluster, perform the steps below. You will need to comment and uncomment some lines of code for testing conda environments outside of the draco cluster. After your tests, we will improve the pipeline and its handling of conda environments.  
 
 - git clone this repository
 
@@ -116,22 +122,24 @@ ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$'
 - Adapt the config and/or sbatch files if needed:
 
 ```
-#Copy
-cp /home/no58rok/features_pipeline/config.json .
-cp /home/no58rok/features_pipeline/snakefile.sbatch .
-#Adapt
+#Copy original files
+cp /work/groups/VEO/shared_data/features_pipeline/config.json .
+cp /work/groups/VEO/shared_data/features_pipeline/snakefile.sbatch .
+#Adapt files if needed
 vim config.json
 vim snakefile.sbatch
 ```
 
 ## Run the pipeline
 
-- Submit an sbatch file to slurm, as if the Snakefile would be a usual script:
+To run the pipeline, you can either allocate a node and run the pipeline directly on the command line or submit a job to the slurm queueing system. We recommend you to allocate a node only for testing and to submit a job to the queue to run your final pipeline. Importantly, some of the required software (such as CheckM) require more memory, so make sure to allocate enough of it in your *snakefile.sbatch* file (more details in the following section "Performance"). For the example files, a standard node is enough.
+
+- Submit an sbatch file to the slurm queueing system, as if the *Snakefile* would be a usual script:
 
 ```
 #Activate Snakemake
 source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate snakemake_v7.24.0
-#Run pipeline with sbatch
+#Submit the pipeline to the slurm queue with sbatch
 sbatch snakefile.sbatch 
 ```
 
@@ -140,12 +148,9 @@ or:
 - Allocate a node
 - run Snakemake directly in the command line, as below
 
-Importantly, some of the required software (such as CheckM) require more memory, so make sure to allocate enough of it.
-
 ```
 #Allocate a node
-salloc -p gpu --gres=gpu:1 
-salloc -p fat -N 1
+salloc --partition=standard
 
 #Activate Snakemake in HPC draco
 source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate snakemake_v7.24.0
@@ -154,6 +159,7 @@ source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate
 #Run snakemake
 snakemake --use-conda --cores 3 --configfile config.json --snakefile /home/no58rok/features_pipeline/Snakefile
 ```
+
 ## Run specific rules
 
 The default mode of Snakefile is to run all rules. If you want to run a specific rule: copy the Snakefile to the folder you are running your samples, uncomment the command line(s) referring to the desired feature(s) and comment the other lines. Then adapt your snakemake.sbatch file and run it. 
@@ -166,7 +172,9 @@ A directed acyclic graph (DAG) is shown for each feature. It describes the pipel
   <img src="./figures/DAG_features_pipeline.png" alt="Alt Text" width="550"/>
 </p>
 
-Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters, with the exception of "emapper_block_size", which was set to a higher value of 10.0.
+# Performance
+
+Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters, with the exception of "emapper_block_size", which was set to a higher value of 10.0. The default value of EggNOG emapper's "emapper_block_size" is 2.0. Increasing this value to 10.0 increases memory consumption, but reduces run time.  
 
 Time performance            |  Memory performance
 :-------------------------:|:-------------------------:
