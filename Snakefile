@@ -26,7 +26,7 @@ use_conda = args.use_conda
 generate_dag = args.dag
 
 #Add variables of general use
-scripts				= "/home/no58rok/features_pipeline/scripts"
+scripts				= "./scripts"
 
 #print(type(config_file_name))
 #<class 'str'>
