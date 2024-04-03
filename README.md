@@ -1,6 +1,6 @@
 # Features pipeline
 
-This pipeline extracts features from bacterial genomes, such as kmers and gene orthologs. In this tutorial, you will learn how to use the pipeline with the example input provided in folder *genomes*. After learning how to use the pipeline, you can use it with your own data. 
+This pipeline extracts features from bacterial genomes, such as kmers and gene families. In this tutorial, you will learn how to use the pipeline with the example input provided in folder *genomes*. After learning, you can use it with your own data. 
 
 <p align="center">
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="550"/>
@@ -14,9 +14,12 @@ The first step to use the pipeline is to clone the GIT repository in your high-p
 #Clone using https
 git clone https://github.com/waltercostamb/features_pipeline.git
 ```
+
+You could clone the repository using something else from https. To know what is the best option for you, consult your cluster manager.
+
 ## Working on draco HPC of the Friedrich-Schiller University Jena
 
-If you are using this pipeline in draco, you do not need to do any extra steps, since the conda environments are already installed.
+If you are using this pipeline in draco, you do not need to do any extra steps, since the conda environments are already installed. Skip section "Working on other HPCs".
 
 ## Working on other HPCs
 
@@ -64,24 +67,29 @@ rule all:
 
 - Save the modifications you made in file *Snakefile* and quit the editor
 
-- Create *files.txt* with the list of the input files provided in the repository:
+# Usage
+
+After cloning the repository, do the following steps:
+
+- Create *files.txt* with the list of the input files provided in the repository with the command line below:
 
 ```
 ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
 ```
 
-- Activate the snakemake environment of your cluster. For installation, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html. Alternatively, consult your cluster manager.   
-- Run the pipeline with the provided input as below:
+To use the pipeline with the example files, you can submit a job to the slurm queue with the *snakemake.sbatch* script provided in the repository.   
+
+If you are using the draco HPC, run the following command to submit the job to slurm:
 
 ```
-snakemake --use-conda --cores 3 --configfile config.json --snakefile Snakefile
+sbatch snakemake.sbatch
 ```
 
-# Usage
+If you are not using the draco cluster, you should adapt *snakemake.sbatch* to your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
 
-To learn how to use the pipeline, run it with the examples provided in this repository.  
+## Expected output
 
-Example input:  
+The example input you just submitted to the queue contains the three following genomes:
 
 ```
 $ls genomes/
@@ -99,37 +107,7 @@ $ls output/
 kmer9_profiles.tsv
 ```
 
-To run the examples, use the provided scripts without any changes following the instructions below.   
- 
-To run the pipeline, you can either allocate a node and run the pipeline directly on the command line or submit a job to the slurm queueing system. We recommend you to allocate a node only for testing and to submit a job to the queue to run your final pipeline. Importantly, some of the required software (such as CheckM) require more memory, so make sure to allocate enough of it in your *snakefile.sbatch* file (more details in the following section "Performance"). For the example files, a standard node is enough.
-
-- Submit an sbatch file to the slurm queueing system, as if the *Snakefile* would be a usual script:
-
-```
-#Activate Snakemake
-source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate snakemake_v7.24.0
-#Submit the pipeline to the slurm queue with sbatch
-sbatch snakefile.sbatch 
-```
-
-or:
-
-- Allocate a node
-- run Snakemake directly in the command line, as below
-
-```
-#Allocate a node
-salloc --partition=standard
-
-#Activate Snakemake in HPC draco
-source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh && conda activate snakemake_v7.24.0
-#Alternatively, Activate Snakemake in your server according to your manager's orientations
-
-#Run snakemake
-snakemake --use-conda --cores 3 --configfile config.json --snakefile /home/no58rok/features_pipeline/Snakefile
-```
-
-## Using your data
+## Use the pipeline with your data
 
 To use the pipeline with your own data:
 
@@ -142,25 +120,29 @@ To use the pipeline with your own data:
 ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
 ```
 
-- Copy and (if needed) adapt the config and/or sbatch files:
+- Adapt (if needed) the config and/or sbatch files:
 
 ```
-#Copy original files
-cp PATH/features_pipeline/Snakefile .
-cp PATH/features_pipeline/config.json .
-cp PATH/features_pipeline/snakefile.sbatch .
 #Adapt files if needed
 vim config.json
 vim snakefile.sbatch
 ```
 
-## Run specific rules
+## Config.json
 
-The default mode of Snakefile is to run all rules. If you want to run a specific rule: copy the Snakefile to the folder you are running your samples, uncomment the command line(s) referring to the desired feature(s) and comment the other lines. Then adapt your snakemake.sbatch file and run it. 
+UNDER CONSTRUCTION.
+
+## snakefile.sbatch
+
+File *snakefile.sbatch* contains information for your cluster, such as required memory and threads. For just a few files, this is not a big concern. However, for a larger amount of files, you should make sure to allocate enough memory and threads. For calculation of requirements, check the "Performance" section below.
+
+## Choosing specific rules
+
+The default mode of Snakefile is to run all rules. If you want to run one or only a few specific rules, change the commented lines in `rule all` of the Snakefile.
 
 # Performance
 
-Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters, with the exception of "emapper_block_size", which was set to a higher value of 10.0. The default value of EggNOG emapper's "emapper_block_size" is 2.0. Increasing this value to 10.0 increases memory consumption, but reduces run time.  
+Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters of *config.json*. Note that "emapper_block_size" is already set to a higher value of 10.0 in *config.json*. The default value of EggNOG emapper's "emapper_block_size" is actually 2.0. Increasing this value to 10.0 increases memory consumption, but reduces run time.  
 
 Time performance            |  Memory performance
 :-------------------------:|:-------------------------:
@@ -168,15 +150,40 @@ Time performance            |  Memory performance
 
 *CheckM lineage_wf* is required for the following rules: *isoelectric_point*, *genes_checkm_lineage* and *checkM_qa*. It is the most memory demanding process, causing the memory requirements to be the same for these three rules.  
 
-Aditionally, the run time to calculate the isoelectric points (IP) per file is on average 2min 10sec. This was calculated as the average run time of 500 files. In addition to calculating the IPs, the rule *isoelectric_point* also requires *CheckM lineage_wf*.  
+Aditionally, the run time to calculate the isoelectric points (IP) per file is ~2min 10sec. This was calculated as the average run time of 500 files. In addition to calculating the IPs, the rule *isoelectric_point* also requires *CheckM lineage_wf*.  
 
-The run time to calculate qa reports with *CheckM qa* is on average 6min 7sec. This was calculated as the average run time of 160 files. Similarly as for rule *isoelectric_point*, the rule *checkM_qa* also requires *CheckM lineage_wf*.  
+The run time to calculate qa reports with *CheckM qa* is ~6min 7sec. This was calculated as the average run time of 160 files. Similarly as for rule *isoelectric_point*, the rule *checkM_qa* also requires *CheckM lineage_wf*.  
 
-The run time to calculate EggNOG emapper reports is on average 12min. This was calculated as the average run time of 250 files. The rule *genes_checkm_lineage* also requires *CheckM lineage_wf*. Below follows an example of how this information can be used to calculate run time:
+The run time to calculate EggNOG emapper reports is ~12min. This was calculated as the average run time of 250 files. The rule *genes_checkm_lineage* also requires *CheckM lineage_wf*. Below follows an example of how this information can be used to calculate run time and required memory to parallelize the *gene_families_emapper* rule.
 
-- 1 file = 12 min follows that: 13,554 files = 162,660 min (or 113 days for 1 core)
-- Parallelizing the pipeline into 40 cores = 2,83 days
-- To run the complete rule *genes_checkm_lineage*, 2,83 days are required plus the *CheckM lineage_wf* run time (~3 days) = 6 days
+# Parallelization
+
+Use the following formula to calculate threads and memory requirements.
+
+- Run time of 1 file = 12 min, given 40 threads and 30 GB memory
+
+Parallelizing the pipeline for 6 files, yields:
+
+- Run time of 6 files = 12 min, given 6 x 40 threads and 6 x 30 GB memory 
+
+The default parallelization of the pipeline is 3. If you want to change that, modify file *snakefile.sbatch*. For 6 files, you can change the default to: 
+
+```
+#!/bin/bash
+#SBATCH --job-name=smk
+#SBATCH --output=smk_%j.out
+#SBATCH --error=smk_%j.err
+#SBATCH --cpus-per-task=240
+#SBATCH --partition=standard
+#SBATCH --mem=180G
+
+module purge
+source /vast/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
+conda activate snakemake_v8.3.1
+
+snakemake --use-conda --cores 6 --configfile config.json --snakefile Snakefile
+conda deactivate
+```
 
 # Available features
 
