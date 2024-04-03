@@ -23,7 +23,7 @@ config_file_name = args.configfile
 snakefile_path = args.snakefile
 cores = args.cores
 use_conda = args.use_conda
-generate_dag = args.dag
+#generate_dag = args.dag
 
 #Add variables of general use
 scripts				= "./scripts"
@@ -38,11 +38,11 @@ with open(config_file_name, 'r') as config_file:
 #print(type(config_file))
 #<class '_io.TextIOWrapper'>
 
-if generate_dag:  # Added block
+#if generate_dag:  # Added block
     # Generate DAG
     #dag_command = f"snakemake --snakefile /home/no58rok/features_pipeline/Snakefile --dag | dot -Tpng > dag.png"
-    dag_command = f"snakemake --snakefile /home/no58rok/features_pipeline/Snakefile --dag"
-    subprocess.run(dag_command, shell=True)
+    #dag_command = f"snakemake --snakefile /home/no58rok/features_pipeline/Snakefile --dag"
+    #subprocess.run(dag_command, shell=True)
 
 #Store variables from the loaded JSON data (config file)
 genomes 			= config_data["genomes"]
