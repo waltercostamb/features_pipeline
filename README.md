@@ -1,10 +1,15 @@
-# Features pipeline
+# Snakemake workflow: Features Pipeline
 
-This pipeline extracts features from bacterial genomes, such as kmers and gene families. In this tutorial, you will learn how to use the pipeline with the example input provided in folder *genomes*. After learning, you can use it with your own data. 
+A Snakemake workflow for extracting features from bacterial genomes, such as kmers and gene families. In this tutorial, you will learn how to use the pipeline with the example input provided in folder *genomes*. After learning, you can use it with your own data. 
 
 <p align="center">
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="550"/>
 </p>
+
+# TODOs
+
+- Follow structure described in: https://github.com/snakemake-workflows/snakemake-workflow-template/tree/main
+	- Adapt usage to structure of "Snakemake Workflow Catalog"
 
 # Cloning the repository
 
