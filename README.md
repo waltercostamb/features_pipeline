@@ -90,7 +90,7 @@ If you are using the draco HPC, run the following command to submit the job to s
 sbatch scripts/snakemake.sbatch
 ```
 
-If you are not using the draco cluster, you should adapt *snakemake.sbatch* to your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
+If you are not using the draco cluster, you should adapt *scripts/snakemake.sbatch* to your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
 
 ## Expected output
 
@@ -175,9 +175,9 @@ The default parallelization of the pipeline is 3. If you want to change that, mo
 
 ```
 #!/bin/bash
-#SBATCH --job-name=smk
-#SBATCH --output=smk_%j.out
-#SBATCH --error=smk_%j.err
+#SBATCH --job-name=smk_features
+#SBATCH --output=smk_features_%j.out
+#SBATCH --error=smk_features_%j.err
 #SBATCH --cpus-per-task=240
 #SBATCH --partition=standard
 #SBATCH --mem=180G
@@ -186,7 +186,7 @@ module purge
 source /vast/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
 conda activate snakemake_v8.3.1
 
-snakemake --use-conda --cores 6 --configfile config.json --snakefile Snakefile
+snakemake --use-conda --cores 6 --configfile config/config.json --snakefile workflow/Snakefile
 conda deactivate
 ```
 
