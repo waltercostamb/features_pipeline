@@ -26,7 +26,7 @@ use_conda = args.use_conda
 #generate_dag = args.dag
 
 #Add variables of general use
-scripts				= "./scripts"
+scripts				= "scripts"
 
 #print(type(config_file_name))
 #<class 'str'>
@@ -271,7 +271,7 @@ rule gene_families_table:
                 conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
                 
                 #Run script to make a table out of the emapper output from rule gene_families_emapper
-                python3 {scripts}/genes_table.py files.txt {output_features}/proteins_emapper/ {output_features}/
+                python3 {scripts}/genes_table.py config/files.txt {output_features}/proteins_emapper/ {output_features}/
                 '
                 """
 
@@ -307,7 +307,7 @@ rule isoelectric_point:
 		(cd tmp_{wildcards.id}
 		#Loop for each split file to calculate isoelectric point
 		for file in ./*faa; do
-			python3 {scripts}/emboss_pepstats.py --email jena@email.de --sequence "$file" --quiet --outfile {wildcards.id}-"$counter"
+			python3 ../{scripts}/emboss_pepstats.py --email jena@email.de --sequence "$file" --quiet --outfile {wildcards.id}-"$counter"
 			((counter++))
 		done
 		cd ..

@@ -76,18 +76,18 @@ rule all:
 
 After cloning the repository, do the following steps:
 
-- Create *files.txt* with the list of the input files provided in the repository with the command line below:
+- Create *config/files.txt* with the list of the input files provided in the repository with the command line below:
 
 ```
-ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
+ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > config/files.txt
 ```
 
-To use the pipeline with the example files, you can submit a job to the slurm queue with the *snakemake.sbatch* script provided in the repository.   
+To use the pipeline with the example files, you can submit a job to the slurm queue with the *scripts/snakemake.sbatch* script provided in the repository.   
 
 If you are using the draco HPC, run the following command to submit the job to slurm:
 
 ```
-sbatch snakemake.sbatch
+sbatch scripts/snakemake.sbatch
 ```
 
 If you are not using the draco cluster, you should adapt *snakemake.sbatch* to your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
@@ -119,18 +119,18 @@ To use the pipeline with your own data:
 - Make sure the directory which contains your bacterial genomes (or contigs) is named *genomes* (in lowercase)
 - Make sure the FASTA files have the extension *.fasta*
   - the pipeline assumes your files are named in the following way: FILE\_ID.fasta
-- Create *files.txt* containing the FILE\_IDs you want to run through the pipeline:
+- Create *config/files.txt* containing the FILE\_IDs you want to run through the pipeline:
 
 ```
-ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > files.txt
+ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > config/files.txt
 ```
 
 - Adapt (if needed) the config and/or sbatch files:
 
 ```
 #Adapt files if needed
-vim config.json
-vim snakefile.sbatch
+vim config/config.json
+vim scripts/snakefile.sbatch
 ```
 
 ## Config.json
@@ -139,7 +139,7 @@ UNDER CONSTRUCTION.
 
 ## snakefile.sbatch
 
-File *snakefile.sbatch* contains information for your cluster, such as required memory and threads. For just a few files, this is not a big concern. However, for a larger amount of files, you should make sure to allocate enough memory and threads. For calculation of requirements, check the "Performance" section below.
+File *scripts/snakefile.sbatch* contains information for your cluster, such as required memory and threads. For just a few files, this is not a big concern. However, for a larger amount of files, you should make sure to allocate enough memory and threads. For calculation of requirements, check the "Performance" section below.
 
 ## Choosing specific rules
 
@@ -147,7 +147,7 @@ The default mode of Snakefile is to run all rules. If you want to run one or onl
 
 # Performance
 
-Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters of *config.json*. Note that "emapper_block_size" is already set to a higher value of 10.0 in *config.json*. The default value of EggNOG emapper's "emapper_block_size" is actually 2.0. Increasing this value to 10.0 increases memory consumption, but reduces run time.  
+Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters of *config/config.json*. Note that "emapper_block_size" is already set to a higher value of 10.0 in *config/config.json*. The default value of EggNOG emapper's "emapper_block_size" is actually 2.0. Increasing this value to 10.0 increases memory consumption, but reduces run time.  
 
 Time performance            |  Memory performance
 :-------------------------:|:-------------------------:

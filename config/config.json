@@ -1,10 +1,10 @@
 {
-    "genomes": "files.txt",
+    "genomes": "config/files.txt",
     "output_folder": "output_features",
     "K": 9,
-    "threads_gerbil": 40,
-    "threads_checkm": 40,
-    "threads_emapper": 40,
+    "threads_gerbil": 30,
+    "threads_checkm": 30,
+    "threads_emapper": 30,
     "emapper_seed_ortholog_evalue": 0.0001,
     "emapper_block_size": 10.0
 }
