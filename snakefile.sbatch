@@ -2,7 +2,7 @@
 #SBATCH --job-name=smk
 #SBATCH --output=smk_%j.out
 #SBATCH --error=smk_%j.err
-#SBATCH --cpus-per-task=3
+#SBATCH --cpus-per-task=120
 #SBATCH --partition=standard
 #SBATCH --mem=30G
 
