@@ -90,6 +90,8 @@ If you are using the draco HPC, run the following command to submit the job to s
 sbatch scripts/snakemake.sbatch
 ```
 
+If you use the default configurations (parallelization of 3, 30 cores and 30 GB per file), the pipeline should take 26 minutes to run.   
+
 If you are not using the draco cluster, you should adapt *scripts/snakemake.sbatch* to your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
 
 ## Expected output
