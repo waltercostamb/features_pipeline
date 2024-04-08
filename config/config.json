@@ -1,6 +1,5 @@
 {
     "genomes": "config/files.txt",
-    "output_folder": "output_features",
     "K": 9,
     "threads_gerbil": 30,
     "threads_checkm": 30,
