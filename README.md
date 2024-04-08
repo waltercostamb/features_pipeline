@@ -1,6 +1,6 @@
 # Snakemake workflow: Features Pipeline
 
-A Snakemake workflow for extracting features from bacterial genomes, such as kmers and gene families. In this tutorial, you will learn how to use the pipeline with the example input provided in folder *genomes*. After learning, you can use it with your own data. 
+A Snakemake workflow for extracting features from bacterial genomes, such as kmers and gene families. In this tutorial, you will learn how to use the pipeline with the example input provided in folder ```genomes```. After learning, you can use it with your own data. 
 
 <p align="center">
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="550"/>
@@ -10,6 +10,7 @@ A Snakemake workflow for extracting features from bacterial genomes, such as kme
 
 - Follow structure described in: https://github.com/snakemake-workflows/snakemake-workflow-template/tree/main
 	- Adapt usage to structure of "Snakemake Workflow Catalog"
+- Develop ```config/README.md```
 
 # Cloning the repository
 
@@ -41,7 +42,7 @@ git clone git@github.com:waltercostamb/features_pipeline.git
 #If neither https nor ssh work, ask your cluster manager on how to best clone a GIT repository
 ```
 
-- After cloning the repository, access the file *Snakefile* with your editor of choice (such as nano or vim) and do the following:
+- After cloning the repository, access the file ```workflow/Snakefile``` with your editor of choice (such as nano or vim) and do the following:
 - Uncomment the line below of **rule all** (line 79)
   
 ```
@@ -70,19 +71,19 @@ rule all:
                 #expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
 ```
 
-- Save the modifications you made in file *Snakefile* and quit the editor
+- Save the modifications you made in file ```workflow/Snakefile``` and quit the editor
 
 # Usage
 
 After cloning the repository, do the following steps:
 
-- Create *config/files.txt* with the list of the input files provided in the repository with the command line below:
+- Create ```config/files.txt``` with the list of the input files provided in the repository with the command line below:
 
 ```
 ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > config/files.txt
 ```
 
-To use the pipeline with the example files, you can submit a job to the slurm queue with the *scripts/snakemake.sbatch* script provided in the repository.   
+To use the pipeline with the example files, you can submit a job to the slurm queue with the ```workflow/scripts/snakemake.sbatch``` script provided in the repository.   
 
 If you are using the draco HPC, run the following command to submit the job to slurm:
 
@@ -92,7 +93,7 @@ sbatch scripts/snakemake.sbatch
 
 If you use the default configurations (parallelization of 3, 30 cores and 30 GB per file), the pipeline should take 26 minutes to run.   
 
-If you are not using the draco cluster, you should adapt *scripts/snakemake.sbatch* to your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
+If you are not using the draco cluster, you should adapt ```workflow/scripts/snakemake.sbatch``` to your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
 
 ## Expected output
 
@@ -118,10 +119,10 @@ kmer9_profiles.tsv
 
 To use the pipeline with your own data:
 
-- Make sure the directory which contains your bacterial genomes (or contigs) is named *genomes* (in lowercase)
-- Make sure the FASTA files have the extension *.fasta*
-  - the pipeline assumes your files are named in the following way: FILE\_ID.fasta
-- Create *config/files.txt* containing the FILE\_IDs you want to run through the pipeline:
+- Make sure the directory which contains your bacterial genomes (or contigs) is named ```genomes``` (in lowercase)
+- Make sure the FASTA files have the extension ```.fasta```
+  - the pipeline assumes your files are named in the following way: ```FILE\_ID.fasta```
+- Create ```config/files.txt``` containing the FILE\_IDs you want to run through the pipeline:
 
 ```
 ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > config/files.txt
@@ -132,7 +133,7 @@ ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$'
 ```
 #Adapt files if needed
 vim config/config.json
-vim scripts/snakefile.sbatch
+vim workflow/scripts/snakefile.sbatch
 ```
 
 ## Config.json
@@ -141,7 +142,7 @@ UNDER CONSTRUCTION.
 
 ## snakefile.sbatch
 
-File *scripts/snakefile.sbatch* contains information for your cluster, such as required memory and threads. For just a few files, this is not a big concern. However, for a larger amount of files, you should make sure to allocate enough memory and threads. For calculation of requirements, check the "Performance" section below.
+File ```workflow/scripts/snakefile.sbatch``` contains information for your cluster, such as required memory and threads. For just a few files, this is not a big concern. However, for a larger amount of files, you should make sure to allocate enough memory and threads. For calculation of requirements, check the "Performance" section below.
 
 ## Choosing specific rules
 
@@ -149,7 +150,7 @@ The default mode of Snakefile is to run all rules. If you want to run one or onl
 
 # Performance
 
-Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters of *config/config.json*. Note that "emapper_block_size" is already set to a higher value of 10.0 in *config/config.json*. The default value of EggNOG emapper's "emapper_block_size" is actually 2.0. Increasing this value to 10.0 increases memory consumption, but reduces run time.  
+Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters of ```config/config.json```. Note that "emapper_block_size" is already set to a higher value of 10.0 in ```config/config.json```. The default value of EggNOG emapper's "emapper_block_size" is actually 2.0. Increasing this value to 10.0 increases memory consumption, but reduces run time.  
 
 Time performance            |  Memory performance
 :-------------------------:|:-------------------------:
@@ -173,7 +174,7 @@ Parallelizing the pipeline for 6 files, yields:
 
 - Run time of 6 files = 12 min, given 6 x 40 threads and 6 x 30 GB memory 
 
-The default parallelization of the pipeline is 3. If you want to change that, modify file *snakefile.sbatch*. For 6 files, you can change the default to: 
+The default parallelization of the pipeline is 3. If you want to change that, modify file ```workflow/scripts/snakefile.sbatch```. For 6 files, you can change the default to: 
 
 ```
 #!/bin/bash
@@ -191,6 +192,8 @@ conda activate snakemake_v8.3.1
 snakemake --use-conda --cores 6 --configfile config/config.json --snakefile workflow/Snakefile
 conda deactivate
 ```
+
+If you are not using the draco cluster, adapt file ```workflow/scripts/snakefile.sbatch``` to your needs.
 
 # Available features
 
