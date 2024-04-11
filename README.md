@@ -12,6 +12,7 @@ A Snakemake workflow for extracting features from bacterial genomes, such as kme
 	- Adapt usage to structure of "Snakemake Workflow Catalog"
 - Develop ```config/README.md```
 - Implement YAML files for handling conda environmentes
+- Update DAGs
 
 # Cloning the repository
 
@@ -31,6 +32,7 @@ Within the pipeline the following software are used:
 - Jellyfish: https://github.com/gmarcais/Jellyfish
 - CheckM
 - EMBOSS pepstats: https://www.ebi.ac.uk/jdispatcher/docs/
+- EggNOG emapper
 
 ## Working on draco HPC of the Friedrich-Schiller University Jena
 
