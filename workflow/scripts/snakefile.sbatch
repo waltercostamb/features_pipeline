@@ -12,6 +12,5 @@ source /vast/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
 conda activate snakemake_v8.3.1
 
 #Run Snakemake
-#Change path of Snakefile if necessary
-snakemake --use-conda --cores 3 --configfile config/config.json --snakefile workflow/Snakefile
+snakemake --use-conda --conda-frontend conda --cores 1 --configfile config/config.json
 conda deactivate

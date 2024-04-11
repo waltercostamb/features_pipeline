@@ -11,6 +11,7 @@ A Snakemake workflow for extracting features from bacterial genomes, such as kme
 - Follow structure described in: https://github.com/snakemake-workflows/snakemake-workflow-template/tree/main
 	- Adapt usage to structure of "Snakemake Workflow Catalog"
 - Develop ```config/README.md```
+- Implement YAML files for handling conda environmentes
 
 # Cloning the repository
 
