@@ -1,4 +1,5 @@
 {
+    "conda-frontend": "conda",
     "genomes": "config/files.txt",
     "K": 9,
     "threads_gerbil": 30,

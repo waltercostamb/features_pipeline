@@ -1,0 +1,7 @@
+name: jellyfish
+channels:
+  - <unknown>
+  - defaults
+dependencies:
+  - kmer-jellyfish=2.3.1=h4ac6f70_0
+prefix: /home/no58rok/.conda/envs/jellyfish

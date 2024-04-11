@@ -13,16 +13,18 @@ parser.add_argument("--configfile", help="Path to the config file")
 parser.add_argument("--snakefile", help="Path to the Snakefile")
 parser.add_argument("--cores", type=int, help="Number of cores to use")
 parser.add_argument("--use-conda", action="store_true", help="Use Conda")
+parser.add_argument("--conda-frontend", help="Conda frontend")
 parser.add_argument("--dag", action="store_true", help="Generate DAG")
 
 #Parse the command-line arguments
 args = parser.parse_args()
 
 #Access the command line arguments
-config_file_name = args.configfile
-snakefile_path = args.snakefile
-cores = args.cores
-use_conda = args.use_conda
+config_file_name 	= args.configfile
+snakefile_path 		= args.snakefile
+cores 			= args.cores
+use_conda               = args.use_conda
+frontend_conda 		= args.conda_frontend
 #generate_dag = args.dag
 
 #Add variables of general use
@@ -71,7 +73,7 @@ for line in fh_in:
 #For instance, to obtain gene-family_profiles.csv, Snakefile needs to run: 1) genes_checkm -> 2) gene_families_emapper -> 3) gene_families_table. So, do not add the "intermediate" outputs of 1 or 2, but rather only the output of 3.
 rule all:
 	input: 
-		#kmers_gerbil
+		#kmers_jellyfish
 		#expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
 		#kmers_table
 		expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
@@ -91,11 +93,13 @@ rule all:
 		expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features)
 
 #Rule to generate k-mer counts using Gerbil
-rule kmers_gerbil:
+rule kmers_jellyfish:
 	input:
 		genome="genomes/{id}.fasta"
 	output:
 		kmers="{output_features}/kmer_files/{id}_kmer{K}.txt"
+	conda:
+		"envs/jellyfish.yaml"
 	params:
 		k=K,
 		t=threads_gerbil
@@ -111,8 +115,13 @@ rule kmers_gerbil:
            		mkdir {output_features}/kmer_files
 		fi
 
-		#Run Gerbil
-	        /home/groups/VEO/tools/gerbil/v1.12/gerbil/build/gerbil -t {params.t} -k {params.k} -l 1 -o fasta {input.genome} {wildcards.id} {output.kmers}
+		#Run Jellyfish and obtain output in Jellyfish format
+		jellyfish count -m {params.k} -s 100M -t {params.t} -C {input.genome} -o {output.kmers}.jf
+                #Obtain FASTA file of kmer counts from output above
+                jellyfish dump {output.kmers}.jf_0 > {output.kmers}
+                #Remove intermediate file
+                rm {output.kmers}.jf_0
+
         	"""
 
 #Rule to generate a table from the k-mer counts
