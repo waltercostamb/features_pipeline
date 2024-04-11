@@ -24,6 +24,14 @@ git clone https://github.com/waltercostamb/features_pipeline.git
 
 You could clone the repository using something else from https. To know what is the best option for you, consult your cluster manager.
 
+# Used software
+
+Within the pipeline the following software are used:
+
+- Jellyfish: https://github.com/gmarcais/Jellyfish
+- CheckM
+- EMBOSS pepstats: https://www.ebi.ac.uk/jdispatcher/docs/
+
 ## Working on draco HPC of the Friedrich-Schiller University Jena
 
 If you are using this pipeline in draco, you do not need to do any extra steps, since the conda environments are already installed. Skip section "Working on other HPCs".
@@ -54,7 +62,7 @@ expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features
 ```
 rule all:
         input:
-                #kmers_gerbil
+                #kmers_jellyfish
                 #expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
                 #kmers_table
                 #expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
