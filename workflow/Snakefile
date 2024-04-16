@@ -291,14 +291,10 @@ rule isoelectric_point:
 		checkm="{output_features}/bins/{id}/genes.faa"
 	output:
 		isoelectric_point="{output_features}/isoelectric_point_files/{id}-iso_point.csv"
+	conda:
+		"envs/emboss.yaml"
 	shell:
 		r"""
-		bash -c '
-            	. $HOME/.bashrc 
-		conda init bash
-	        # Activate the python3 environment
-                conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
-		
 		#Create output folder
 		if [ ! -d {output_features}/isoelectric_point_files ]; then 
            		mkdir {output_features}/isoelectric_point_files
@@ -332,7 +328,6 @@ rule isoelectric_point:
 
 		#Remove unnecessary output from emboss
 		rm -r tmp_{wildcards.id} 
-		'
 		"""
 
 rule isoelectric_point_table:
