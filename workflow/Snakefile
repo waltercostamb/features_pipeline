@@ -336,18 +336,12 @@ rule isoelectric_point_table:
 		emapper=expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
 	output:
 		iso_profiles="{output_features}/iso-points_profiles_known_orthologs.csv"
+	conda:
+		"envs/emboss.yaml"
 	shell:
 		r"""
-		bash -c '
-                . $HOME/.bashrc
-                conda init bash
-                source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
-                # Activate the python3 environment
-                conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
-                
                 #Run script to make a table out of the EMBOSS stats output from rule isoelectric_point
                 python3 {scripts}/iso-point_table.py {genomes} {output_features}/proteins_emapper/ {output_features}/ {output_features}/isoelectric_point_files/
-                '
                 """
 
 
