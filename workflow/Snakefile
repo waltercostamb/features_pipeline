@@ -226,21 +226,12 @@ rule gene_families_table:
 		emapper=expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
 	output:
 		gene_profiles="{output_features}/gene-family_profiles.csv"
-#       conda:
-#               "checkm_v1.2.2.yaml"
-#               "checkm_v1.2.2"
+	conda:
+		"emboss.yaml"
 	shell:
 		r"""
-		bash -c '
-                . $HOME/.bashrc
-                conda init bash
-                source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
-                # Activate the python3 environment
-                conda activate /home/no58rok/tools/miniconda3/envs/bacterial_phenotypes
-                
                 #Run script to make a table out of the emapper output from rule gene_families_emapper
                 python3 {scripts}/genes_table.py config/files.txt {output_features}/proteins_emapper/ {output_features}/
-                '
                 """
 
 rule isoelectric_point:
