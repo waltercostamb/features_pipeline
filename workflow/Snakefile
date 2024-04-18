@@ -84,11 +84,11 @@ rule all:
 		#gene_families_emapper
 		#expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
 		#gene_families_table
-	#	expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
+		expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
 		#isoelectric_point
 		#expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
 		#isoelectric_point_table
-		expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features)
+	#	expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features)
 
 #Rule to generate k-mer counts using Gerbil
 rule kmers_jellyfish:
@@ -158,29 +158,17 @@ rule genes_checkm_lineage:
 		checkm=expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
 	params:
 		t=threads_checkm
-	#conda:
-	#	"envs/checkm.yaml"
+	conda:
+		"envs/checkm.yaml"
 	shell:
 		"""
-                bash -c '
                 #Create output folder if it has not been done before
                 if [ ! -d {output_features} ]; then
                         mkdir {output_features}
                 fi
 
-                . $HOME/.bashrc # if not loaded automatically
-                conda init bash
-
-                #Activate conda environment
-                source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
-                conda activate checkm_v1.2.2
-
                 #Run checkm lineage only once
                 checkm lineage_wf -t {params.t} -x fasta {input.genome_folder} {output_features}
-                #Substitute checkm run for a simple copying of backup files (for debug purposes)
-                #cp -r checkm_output/bins {output_features}/.
-                #cp -r checkm_output/lineage.ms {output_features}/.
-                '
 		"""
 
 #Rule to run checkm_qa 
@@ -191,19 +179,12 @@ rule checkm_qa:
 		checkm_qa="{output_features}/bins/{id}/{id}-qa.txt"
 	params:
 		t=threads_checkm
+	conda:
+		"envs/checkm.yaml"
 	shell:
 		r"""
-		bash -c '
-            	. $HOME/.bashrc 
-		conda init bash
-
-		#Activate conda environment
-		source /home/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh 
-            	conda activate checkm_v1.2.2
-
                 #Run checkm qa for every ID
                 checkm qa -o 2 -f {output.checkm_qa} {output_features}/lineage.ms {output_features}
-		'
 		"""
 
 rule gene_families_emapper:

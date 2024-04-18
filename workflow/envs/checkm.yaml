@@ -3,8 +3,8 @@ channels:
   - bioconda
   - defaults
 dependencies:
-  - checkm-genome=1.0.7
-  - python=2.7
+  - checkm-genome=1.2.2
+  - python=3.6
   - hmmer=3.1b2
-  - pplacer=1.1.alpha17
+  - pplacer=1.1.alpha19
   - prodigal=2.6.3
