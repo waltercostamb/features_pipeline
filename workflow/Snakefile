@@ -37,15 +37,6 @@ scripts				= "workflow/scripts"
 with open(config_file_name, 'r') as config_file:
     config_data = json.load(config_file)
 
-#print(type(config_file))
-#<class '_io.TextIOWrapper'>
-
-#if generate_dag:  # Added block
-    # Generate DAG
-    #dag_command = f"snakemake --snakefile /home/no58rok/features_pipeline/Snakefile --dag | dot -Tpng > dag.png"
-    #dag_command = f"snakemake --snakefile /home/no58rok/features_pipeline/Snakefile --dag"
-    #subprocess.run(dag_command, shell=True)
-
 #Store variables from the loaded JSON data (config file)
 genomes 			= config_data["genomes"]
 K 				= int(config_data["K"])
@@ -54,6 +45,7 @@ threads_checkm 			= int(config_data["threads_checkm"])
 threads_emapper 		= int(config_data["threads_emapper"])
 emapper_seed_ortholog_evalue 	= int(config_data["emapper_seed_ortholog_evalue"])
 emapper_block_size 		= int(config_data["emapper_block_size"])
+emapper_db_dir                  = config_data["emapper_db_dir"]
 
 #Store variable (output folder)
 output_features			= "results"
@@ -88,7 +80,7 @@ rule all:
 		#isoelectric_point
 		#expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
 		#isoelectric_point_table
-	#	expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features)
+		expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features)
 
 #Rule to generate k-mer counts using Gerbil
 rule kmers_jellyfish:
@@ -195,18 +187,12 @@ rule gene_families_emapper:
 	params:
 		t=threads_emapper,
 		e=emapper_seed_ortholog_evalue,
-		b=emapper_block_size
-#	conda:
-#		"checkm_v1.2.2.yaml"
-#		"checkm_v1.2.2"
+		b=emapper_block_size,
+		db=emapper_db_dir
+	conda:
+		"envs/emapper.yaml"
 	shell:
 		r"""
-                bash -c '
-                . $HOME/.bashrc 
-                conda init bash
-                source /home/xa73pav/tools/anaconda3/etc/profile.d/conda.sh
-                conda activate eggnog-mapper_v2.1.11
-
 		if [ ! -d "{output_features}/proteins_emapper" ]; then 
 			mkdir "{output_features}/proteins_emapper"
 		fi
@@ -217,8 +203,7 @@ rule gene_families_emapper:
 
 		#Substitute emapper run for a backup files copy (for debugging)
 	        #cp -r backup_proteins_emapper/{wildcards.id} {output_features}/proteins_emapper/.
-                emapper.py --cpu {params.t} --data_dir /work/groups/VEO/databases/emapper/v20230620 -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
-                '
+                emapper.py --cpu {params.t} --data_dir {params.db} -o {wildcards.id} --output_dir {output.emapper} -m diamond -i {input.checkm} --seed_ortholog_evalue {params.e} --go_evidence non-electronic --tax_scope auto --target_orthologs all --block_size {params.b}
                 """	
 
 rule gene_families_table:
@@ -227,7 +212,7 @@ rule gene_families_table:
 	output:
 		gene_profiles="{output_features}/gene-family_profiles.csv"
 	conda:
-		"emboss.yaml"
+		"envs/emboss.yaml"
 	shell:
 		r"""
                 #Run script to make a table out of the emapper output from rule gene_families_emapper

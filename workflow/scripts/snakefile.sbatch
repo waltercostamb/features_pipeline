@@ -2,9 +2,9 @@
 #SBATCH --job-name=smk_features
 #SBATCH --output=smk_features_%j.out
 #SBATCH --error=smk_features_%j.err
-#SBATCH --cpus-per-task=90
-#SBATCH --partition=standard
-#SBATCH --mem=90G
+#SBATCH --cpus-per-task=30
+#SBATCH --partition=gpu
+#SBATCH --mem=30G
 
 #Load any necessary modules for snakemake 
 module purge

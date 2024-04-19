@@ -6,5 +6,6 @@
     "threads_checkm": 30,
     "threads_emapper": 30,
     "emapper_seed_ortholog_evalue": 0.0001,
-    "emapper_block_size": 10.0
+    "emapper_block_size": 10.0,
+    "emapper_db_dir": "/work/groups/VEO/databases/emapper/v20230620"
 }
