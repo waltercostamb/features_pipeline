@@ -3,6 +3,7 @@
 #SBATCH --output=smk_features_%j.out
 #SBATCH --error=smk_features_%j.err
 #SBATCH --cpus-per-task=30
+#SBATCH --hint=nomultithread
 #SBATCH --partition=gpu
 #SBATCH --mem=30G
 
