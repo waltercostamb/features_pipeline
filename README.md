@@ -49,7 +49,7 @@ ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$'
 To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```: 
 
 ```
-sbatch workflow/scripts/snakemake.sbatch
+sbatch workflow/scripts/snakefile.sbatch
 ```
 
 If you use the default configurations (parallelization of 3, 30 cores and 30 GB per file), the pipeline should take 26 minutes to run.   
