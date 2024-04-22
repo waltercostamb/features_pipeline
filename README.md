@@ -52,7 +52,7 @@ To use the pipeline with the example files, you can submit a job to the slurm qu
 sbatch workflow/scripts/snakefile.sbatch
 ```
 
-If you use the default configurations (parallelization of 3, 30 cores and 30 GB per file), the pipeline should take 26 minutes to run.   
+If you use the default configurations (no parallelization, or ```--cores 1```, 30 cores and 35 GB), the pipeline should take 45 minutes to run.   
 
 If you are not using the draco cluster, you should adapt ```workflow/scripts/snakemake.sbatch``` to your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
 
