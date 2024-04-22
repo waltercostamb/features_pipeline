@@ -6,83 +6,35 @@ A Snakemake workflow for extracting features from bacterial genomes, such as kme
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="550"/>
 </p>
 
-# TODOs
-
-- Follow structure described in: https://github.com/snakemake-workflows/snakemake-workflow-template/tree/main
-	- Adapt usage to structure of "Snakemake Workflow Catalog"
-- Develop ```config/README.md```
-- Implement YAML files for handling conda environmentes
-- Update DAGs
-
-# Cloning the repository
-
-The first step to use the pipeline is to clone the GIT repository in your high-performance cluster:
-
-```
-#Clone using https
-git clone https://github.com/waltercostamb/features_pipeline.git
-```
-
-You could clone the repository using something else from https. To know what is the best option for you, consult your cluster manager.
-
-# Used software
-
 Within the pipeline the following software are used:
 
 - Jellyfish: https://github.com/gmarcais/Jellyfish
-- CheckM
+- CheckM: https://github.com/Ecogenomics/CheckM
 - EMBOSS pepstats: https://www.ebi.ac.uk/jdispatcher/docs/
-- EggNOG emapper
+- EggNOG emapper: https://github.com/eggnogdb/eggnog-mapper
 
-## Working on draco HPC of the Friedrich-Schiller University Jena
+# Installation
 
-If you are using this pipeline in draco, you do not need to do any extra steps, since the conda environments are already installed. Skip section "Working on other HPCs".
+## Cloning the repository
 
-## Working on other HPCs
-
-If you are using this pipeline in another cluster, perform the steps below. You will need to comment and uncomment some lines of code for testing conda environments outside of the draco cluster. After your tests, we will improve the pipeline and its handling of conda environments.  
-
-- git clone this repository
+The first step to use the pipeline is to clone the GIT repository:
 
 ```
-cd PATH
 #Clone using https
 git clone https://github.com/waltercostamb/features_pipeline.git
-#Alternative to https: clone using ssh
-git clone git@github.com:waltercostamb/features_pipeline.git
-#If neither https nor ssh work, ask your cluster manager on how to best clone a GIT repository
 ```
 
-- After cloning the repository, access the file ```workflow/Snakefile``` with your editor of choice (such as nano or vim) and do the following:
-- Uncomment the line below of **rule all** (line 79)
-  
-```
-expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features=output_features)
-```
-- Comment all other lines of **rule all** (lines 75, 81, 85 and 87), so that rule all looks like below:
+You could clone the repository using something else from https. To know what is the best option for you, consult your admin.
 
-```
-rule all:
-        input:
-                #kmers_jellyfish
-                #expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
-                #kmers_table
-                #expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
-                #genes_checkm_lineage
-                #expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
-                #genes_checkm_lineage_yaml
-                expand("{output_features}/bins/{id}/genes.gff", id=genomeID_lst, output_features=output_features)
-                #genes_checkm_qa
-                #expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
-                #gene_families_emapper
-                #expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
-                #gene_families_table
-                #expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
-                #isoelectric_point
-                #expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
-```
+## Downloading databases
 
-- Save the modifications you made in file ```workflow/Snakefile``` and quit the editor
+If you are using this pipeline in the draco high-performance cluster and are part of the VEO group, skip this section.  
+
+After cloning the repository, you need to download the database required by EggNOG emapper:
+
+- Install EggNOG emapper: https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.12#installation
+- Download the database with ```download_eggnog_data.py``` following: https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.12#setup This should download a DB of ~50 GB
+- Change file ```config/config.json``` to update parameter "emapper_db_dir". This parameter contains the path to the eggnog database. The default is ```/work/groups/VEO/databases/emapper/v20230620```
 
 # Usage
 
@@ -94,12 +46,10 @@ After cloning the repository, do the following steps:
 ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > config/files.txt
 ```
 
-To use the pipeline with the example files, you can submit a job to the slurm queue with the ```workflow/scripts/snakemake.sbatch``` script provided in the repository.   
-
-If you are using the draco HPC, run the following command to submit the job to slurm:
+To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```: 
 
 ```
-sbatch scripts/snakemake.sbatch
+sbatch workflow/scripts/snakemake.sbatch
 ```
 
 If you use the default configurations (parallelization of 3, 30 cores and 30 GB per file), the pipeline should take 26 minutes to run.   
