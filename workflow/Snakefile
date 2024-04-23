@@ -15,6 +15,7 @@ parser.add_argument("--cores", type=int, help="Number of cores to use")
 parser.add_argument("--use-conda", action="store_true", help="Use Conda")
 parser.add_argument("--conda-frontend", help="Conda frontend")
 parser.add_argument("--dag", action="store_true", help="Generate DAG")
+parser.add_argument("--latency-wait", type=int, help="Latency wait")
 
 #Parse the command-line arguments
 args = parser.parse_args()
@@ -25,7 +26,8 @@ snakefile_path 		= args.snakefile
 cores 			= args.cores
 use_conda               = args.use_conda
 frontend_conda 		= args.conda_frontend
-#generate_dag = args.dag
+latency_wait		= args.latency_wait
+#generate_dag 		= args.dag
 
 #Add variables of general use
 scripts				= "workflow/scripts"
@@ -80,7 +82,9 @@ rule all:
 		#isoelectric_point
 		#expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
 		#isoelectric_point_table
-		expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features)
+		expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features),
+		#prophages_jaeger
+		expand("{output_features}/jaeger/{id}_default_jaeger.tsv", id=genomeID_lst, output_features=output_features)
 
 #Rule to generate k-mer counts using Gerbil
 rule kmers_jellyfish:
@@ -277,6 +281,31 @@ rule isoelectric_point_table:
                 python3 {scripts}/iso-point_table.py {genomes} {output_features}/proteins_emapper/ {output_features}/ {output_features}/isoelectric_point_files/
                 """
 
+#Extracting prophages from genomes using Jaeger
+rule prophages_jaeger:
+	input:
+		genome="genomes/{id}.fasta"
+	output:
+		"{output_features}/jaeger/{id}_default_jaeger.tsv"
+	conda:
+		"envs/jaeger.yaml"
+	params:
+        	output_dir = "results/jaeger"
+	shell:
+		r"""
+		#Create output folder if it has not been done before
+		if [ ! -d {output_features} ]; then 
+			mkdir {output_features}
+		fi
+		
+		#Create output folder of Jaeger's output files
+		if [ ! -d {output_features}/kmer_files ]; then 
+           		mkdir {output_features}/kmer_files
+		fi
+
+		#Run tool
+        	Jaeger -i {input.genome} -o {params.output_dir} --batch 128
+		"""
 
 #rule pfam:
 #	input:
