@@ -12,6 +12,7 @@ Within the pipeline the following software are used:
 - CheckM: https://github.com/Ecogenomics/CheckM
 - EMBOSS pepstats: https://www.ebi.ac.uk/jdispatcher/docs/
 - EggNOG emapper: https://github.com/eggnogdb/eggnog-mapper
+- Jaeger: https://github.com/Yasas1994/Jaeger
 
 # Installation
 
@@ -199,7 +200,9 @@ Rule: genes_checkm.
 
 ## Isoelectric points of proteins 
 
-Proteins are annotated by checkM (using prodigal internally). Isoelectric point of proteins is calculated by EMBOSS pepstats. Lastaly, the output of pepstats is formated by an in-house script.
+Proteins are annotated by checkM (using prodigal internally). Isoelectric point of proteins is calculated by EMBOSS pepstats. Lastly, the output of pepstats is formated by an in-house script.
 Rules: genes_checkm and isoelectric_point.
 
+## Prophages
 
+Phage genomes are identified in the prokaryotic genomes using Jager. Rule: prophages_jaeger.
