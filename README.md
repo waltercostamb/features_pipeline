@@ -78,19 +78,30 @@ If you are not using the draco cluster, you should adapt ```workflow/scripts/sna
 The example input you just submitted to the queue contains the three following genomes:
 
 ```
-$ls genomes/
+ls genomes/
 1266999.fasta  743966.fasta  GCA_900660695.fasta
 ```
 
-If you run the example input, you will obtain their kmer profiles, gene families, checkm qa reports, isoelectric points of proteins and identified prophage. The output of the kmer rule follows:
+If you run the example input, you will obtain their [kmer profiles](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#kmers), eggNOG [gene families](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#gene-families), genome/contig/MAG quality reports from CheckM, [isoelectric points of proteins](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#isoelectric-points-of-proteins) and [identified prophages](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#prophages). For the example files, this is the directory tree of results:  
 
 ```
-#Individual kmer profiles
-$ls output/kmer_files/ 
-1266999_kmer9.txt  743966_kmer9.txt  GCA_900660695_kmer9.txt
-#TSV file combining all profiles
-$ls output/
-kmer9_profiles.tsv
+results
+├── bins
+│   ├── 1266999
+│   ├── 743966
+│   └── GCA_900660695
+├── isoelectric_point_files
+├── jaeger
+├── kmer_files
+├── proteins_emapper
+│   ├── 1266999
+│   ├── 743966
+│   └── GCA_900660695
+└── storage
+    ├── aai_qa
+    │   ├── 1266999
+    │   └── 743966
+    └── tree
 ```
 
 ## Use the pipeline with your data
@@ -161,7 +172,7 @@ A directed acyclic graph (DAG) is shown for each feature. It describes the pipel
 
 ## Gene families
 
-Genes are first predicted with CheckM (which uses prodigal internally) from the bacterial genomes. Afterwards, families are assigned with eggnog emapper. Finally, an in-house script creates a table with gene families per file ID: 1 symbols the presence of that family in the file ID, while 0 symbols absence.
+Genes are first predicted with CheckM (which uses prodigal internally) from the input genomes. Afterwards, families are assigned with eggNOG emapper. Finally, an in-house script creates a table with gene families per file ID: 1 indicates the presence of that family in that file, while 0 indicates absence.
 Rules: genes_checkm and gene_families_emapper. 
 
 ## kmers
