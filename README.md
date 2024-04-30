@@ -59,15 +59,13 @@ ls genomes
 ls -1 genomes/*fasta | sed 's/\.fasta//g' | sed 's/genomes\///g' | grep -v '^$' > config/files.txt
 ```
 
-To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```: 
+To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```, as below. ```snakemake.sbatch``` is a script that runs snakemake (see section [snakefile.sbatch](https://github.com/waltercostamb/features_pipeline/blob/main/config/config.json) for details).
 
 ```
 sbatch workflow/scripts/snakefile.sbatch
 ```
 
-If you use the default configurations (no parallelization, or ```--cores 1```, 30 cores and 35 GB), the pipeline should take 45 minutes to run.   
-
-If you are not using the draco cluster, you should adapt ```workflow/scripts/snakemake.sbatch``` to your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
+If you are not using the draco cluster, you should adapt ```workflow/scripts/snakemake.sbatch``` to fit your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
 
 ## Expected output
 
@@ -128,16 +126,18 @@ File ```workflow/scripts/snakefile.sbatch``` (see content below) contains inform
 #SBATCH --partition=long
 #SBATCH --mem=5G
 
-#Load any necessary modules for snakemake 
+#Unload any active module
 module purge
+#Load modules for snakemake (in the draco cluster)
 source /vast/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
-
+#Activate snakemake conda environment
 conda activate snakemake_v7.24.0
 
 #Run Snakemake
 #snakemake --use-conda --conda-frontend conda --cores 1 --configfile config/config.json
 snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple
 
+#Deactivate conda environment
 conda deactivate
 ```
 
