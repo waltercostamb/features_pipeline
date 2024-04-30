@@ -180,8 +180,8 @@ kmers are sub-sequences of a genome. Kmers have length k, which can be defined b
 
 Output:   
 
-- results/kmer_files/FILE_ID_kmer9.txt: FASTA files per input genomes with the kmer profile produced by Jellyfish   
-- results/kmer9_profiles.tsv: a single tsv file combining all profiles for genomes indicated in ```config/files.txt```
+- ```results/kmer_files/FILE_ID_kmer9.txt```: FASTA files per input genomes with the kmer profile produced by Jellyfish   
+- ```results/kmer9_profiles.tsv```: a single tsv file combining all profiles for genomes indicated in ```config/files.txt```
 
 ## GC content
 
