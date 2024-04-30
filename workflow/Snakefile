@@ -1,36 +1,37 @@
 #Developer: Maria Beatriz Walter Costa, waltercostamb@gmail.com
 #This pipeline extracts diverse features from bacterial genomes.
 
-import argparse
-import sys
+#import argparse
+#import sys
 import json
 
 #Create argument parser
-parser = argparse.ArgumentParser(description="Your script description")
+#parser = argparse.ArgumentParser(description="Your script description")
 
 #Add command-line arguments
-parser.add_argument("--configfile", help="Path to the config file")
-parser.add_argument("--snakefile", help="Path to the Snakefile")
-parser.add_argument("--cores", type=int, help="Number of cores to use")
-parser.add_argument("--use-conda", action="store_true", help="Use Conda")
-parser.add_argument("--conda-frontend", help="Conda frontend")
-parser.add_argument("--dag", action="store_true", help="Generate DAG")
-parser.add_argument("--latency-wait", type=int, help="Latency wait")
+#parser.add_argument("--configfile", help="Path to the config file")
+#parser.add_argument("--snakefile", help="Path to the Snakefile")
+#parser.add_argument("--cores", type=int, help="Number of cores to use")
+#parser.add_argument("--use-conda", action="store_true", help="Use Conda")
+#parser.add_argument("--conda-frontend", help="Conda frontend")
+#parser.add_argument("--dag", action="store_true", help="Generate DAG")
+#parser.add_argument("--latency-wait", type=int, help="Latency wait")
 
 #Parse the command-line arguments
-args = parser.parse_args()
+#args = parser.parse_args()
 
 #Access the command line arguments
-config_file_name 	= args.configfile
-snakefile_path 		= args.snakefile
-cores 			= args.cores
-use_conda               = args.use_conda
-frontend_conda 		= args.conda_frontend
-latency_wait		= args.latency_wait
+#config_file_name 	= args.configfile
+#snakefile_path 		= args.snakefile
+#cores 			= args.cores
+#use_conda               = args.use_conda
+#frontend_conda 		= args.conda_frontend
+#latency_wait		= args.latency_wait
 #generate_dag 		= args.dag
 
 #Add variables of general use
 scripts				= "workflow/scripts"
+config_file_name		= "config/config.json"
 
 #print(type(config_file_name))
 #<class 'str'>
@@ -85,6 +86,8 @@ rule all:
 		expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features),
 		#prophages_jaeger
 		expand("{output_features}/jaeger/{id}_default_jaeger.tsv", id=genomeID_lst, output_features=output_features)
+		#hmmscan_profile
+        	#expand("{output_features}/hmm_scan/{id}-tbl.txt", id=genomeID_lst, output_features=output_features)
 
 #Rule to generate k-mer counts using Gerbil
 rule kmers_jellyfish:
@@ -97,6 +100,8 @@ rule kmers_jellyfish:
 	params:
 		k=K,
 		t=threads_gerbil
+	resources:
+		threads=threads_gerbil
 	shell:
 		r"""
 		#Create output folder if it has not been done before
@@ -126,6 +131,8 @@ rule kmers_table:
 		"{output_features}/kmer{K}_profiles.tsv"
 	params:
 		k=K
+	resources:
+		threads=1
 	shell:
 		r"""
 		#Create list of files
@@ -154,6 +161,8 @@ rule genes_checkm_lineage:
 		checkm=expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features)
 	params:
 		t=threads_checkm
+	resources:
+		threads=threads_checkm
 	conda:
 		"envs/checkm.yaml"
 	shell:
@@ -177,6 +186,8 @@ rule checkm_qa:
 		t=threads_checkm
 	conda:
 		"envs/checkm.yaml"
+	resources:
+		threads=threads_checkm
 	shell:
 		r"""
                 #Run checkm qa for every ID
@@ -193,6 +204,8 @@ rule gene_families_emapper:
 		e=emapper_seed_ortholog_evalue,
 		b=emapper_block_size,
 		db=emapper_db_dir
+	resources:
+		threads=threads_emapper
 	conda:
 		"envs/emapper.yaml"
 	shell:
@@ -217,6 +230,8 @@ rule gene_families_table:
 		gene_profiles="{output_features}/gene-family_profiles.csv"
 	conda:
 		"envs/emboss.yaml"
+	resources:
+		threads=1
 	shell:
 		r"""
                 #Run script to make a table out of the emapper output from rule gene_families_emapper
@@ -228,6 +243,8 @@ rule isoelectric_point:
 		checkm="{output_features}/bins/{id}/genes.faa"
 	output:
 		isoelectric_point="{output_features}/isoelectric_point_files/{id}-iso_point.csv"
+	resources:
+		threads=1
 	conda:
 		"envs/emboss.yaml"
 	shell:
@@ -273,6 +290,8 @@ rule isoelectric_point_table:
 		emapper=expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
 	output:
 		iso_profiles="{output_features}/iso-points_profiles_known_orthologs.csv"
+	resources:
+		threads=1
 	conda:
 		"envs/emboss.yaml"
 	shell:
@@ -289,6 +308,8 @@ rule prophages_jaeger:
 		"{output_features}/jaeger/{id}_default_jaeger.tsv"
 	conda:
 		"envs/jaeger.yaml"
+	resources:
+		threads=1
 	params:
         	output_dir = "results/jaeger"
 	shell:
@@ -307,21 +328,26 @@ rule prophages_jaeger:
         	Jaeger -i {input.genome} -o {params.output_dir} --batch 128
 		"""
 
-#rule pfam:
-#	input:
-#		checkm="output/bins/{id}/genes.faa"
-#	output:
-#		?
-#	shell:
-#		r"""
-#		#Create output folder if it has not been done before
-#		if [ ! -d output_features ]; then 
-#			mkdir output_features
-#		fi
-#		#Run HMMER
-#		/home/groups/VEO/tools/hmmer/v3.3.1/bin/hmmsearch input.checkm DB_PATH	
-#		"""
-
-#rule dram:
-
+#Finding HMM families from Pfam database using hmmscan (HMMER)
+#Adapted from wrapper: https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/hmmer/hmmscan.html
+#rule hmmscan_profile:
+#    input:
+#	fasta=expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features),
+#        profile="database_tmp/Pfam-A.hmm.gz"
+#    output:
+        # only one of these is required
+#        tblout="test-prot-tbl.txt", # save parseable table of per-sequence hits to file <f>
+#        domtblout="test-prot-domtbl.txt", # save parseable table of per-domain hits to file <f>
+#        pfamtblout="test-prot-pfamtbl.txt", # save table of hits and domains to file, in Pfam format <f>
+#        outfile="test-prot-out.txt", # Direct the main human-readable output to a file <f> instead of the default stdout.
+#	resources:
+#		threads=1
+#    params:
+#        evalue_threshold=0.00001,
+        # if bitscore threshold provided, hmmscan will use that instead
+        #score_threshold=50,
+#        extra="",
+#    threads: 4
+#    wrapper:
+#        "v3.9.0/bio/hmmer/hmmscan"
 
