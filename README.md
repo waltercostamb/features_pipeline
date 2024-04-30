@@ -131,7 +131,7 @@ UNDER CONSTRUCTION.
 
 ## snakefile.sbatch
 
-File ```workflow/scripts/snakefile.sbatch``` (see content below) is a script that runs the snakemake pipeline. It contains information for the slurm cluster. If you submit this script to slurm, it will act as a *master* by sending small jobs to the queue corresponding to individual rules of the pipeline. The line ```snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple``` contains parameters of Snakemake: ```jobs 3``` indicates how many jobs you want the *master* script to send to slurm at the same time; ```--profile simple``` indicates the folder containing the configuration file for the cluster.  
+File ```workflow/scripts/snakefile.sbatch``` (see content below) is a script that runs the snakemake pipeline. It contains information for the slurm cluster. If you submit this script to slurm, it will act as a *master* by sending small jobs to the queue corresponding to individual rules of the pipeline. The line ```snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple``` contains parameters of Snakemake: ```jobs 50``` indicates how many jobs you want the *master* script to send to slurm at the same time; ```--profile simple``` indicates the folder containing the configuration file for the cluster.  
 
 ```
 #!/bin/bash
@@ -152,7 +152,7 @@ conda activate snakemake_v7.24.0
 
 #Run Snakemake
 #snakemake --use-conda --conda-frontend conda --cores 1 --configfile config/config.json
-snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple
+snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 50 --profile simple
 
 #Deactivate conda environment
 conda deactivate
