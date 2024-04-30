@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --hint=nomultithread
 #SBATCH --partition=long
-#SBATCH --mem=30G
+#SBATCH --mem=5G
 
 #Load any necessary modules for snakemake 
 module purge
