@@ -66,7 +66,7 @@ $ls genomes/
 1266999.fasta  743966.fasta  GCA_900660695.fasta
 ```
 
-If you run the example input, you will obtain their kmer profiles, gene families, checkm qa reports and isoelectric points of proteins. The output of the kmer rule follows:
+If you run the example input, you will obtain their kmer profiles, gene families, checkm qa reports, isoelectric points of proteins and identified prophage. The output of the kmer rule follows:
 
 ```
 #Individual kmer profiles
@@ -104,58 +104,34 @@ UNDER CONSTRUCTION.
 
 ## snakefile.sbatch
 
-File ```workflow/scripts/snakefile.sbatch``` contains information for your cluster, such as required memory and threads. For just a few files, this is not a big concern. However, for a larger amount of files, you should make sure to allocate enough memory and threads. For calculation of requirements, check the "Performance" section below.
+File ```workflow/scripts/snakefile.sbatch``` (see content below) contains information for the slurm cluster. If you submit this script to slurm, it will act as a *master* by sending small jobs to the queue corresponding to individual rules of the pipeline. The line ```snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple``` contains the parameters of the Snakemake pipeline. Parameter ```jobs 3``` indicate how many jobs you want the *master* script to send to slurm at the same time. Parameter ```--profile simple``` indicates the folder containing the configurantion file for the cluster.  
+
+```
+#!/bin/bash
+#SBATCH --job-name=smk_main
+#SBATCH --output=smk_main_%j.out
+#SBATCH --error=smk_main_%j.err
+#SBATCH --cpus-per-task=1
+#SBATCH --hint=nomultithread
+#SBATCH --partition=long
+#SBATCH --mem=5G
+
+#Load any necessary modules for snakemake 
+module purge
+source /vast/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
+
+conda activate snakemake_v7.24.0
+
+#Run Snakemake
+#snakemake --use-conda --conda-frontend conda --cores 1 --configfile config/config.json
+snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple
+
+conda deactivate
+```
 
 ## Choosing specific rules
 
 The default mode of Snakefile is to run all rules. If you want to run one or only a few specific rules, change the commented lines in `rule all` of the Snakefile.
-
-# Performance
-
-Below follows the time and memory performance of the pipeline for 3 different input sizes. For these calculations, we used 1 core and default parameters of ```config/config.json```. Note that "emapper_block_size" is already set to a higher value of 10.0 in ```config/config.json```. The default value of EggNOG emapper's "emapper_block_size" is actually 2.0. Increasing this value to 10.0 increases memory consumption, but reduces run time.  
-
-Time performance            |  Memory performance
-:-------------------------:|:-------------------------:
-![](./figures/performance_plot1_features_pipeline.png)  |  ![](./figures/performance_plot2_features_pipeline.png)
-
-*CheckM lineage_wf* is required for the following rules: *isoelectric_point*, *genes_checkm_lineage* and *checkM_qa*. It is the most memory demanding process, causing the memory requirements to be the same for these three rules.  
-
-Aditionally, the run time to calculate the isoelectric points (IP) per file is ~2min 10sec. This was calculated as the average run time of 500 files. In addition to calculating the IPs, the rule *isoelectric_point* also requires *CheckM lineage_wf*.  
-
-The run time to calculate qa reports with *CheckM qa* is ~6min 7sec. This was calculated as the average run time of 160 files. Similarly as for rule *isoelectric_point*, the rule *checkM_qa* also requires *CheckM lineage_wf*.  
-
-The run time to calculate EggNOG emapper reports is ~12min. This was calculated as the average run time of 250 files. The rule *genes_checkm_lineage* also requires *CheckM lineage_wf*. Below follows an example of how this information can be used to calculate run time and required memory to parallelize the *gene_families_emapper* rule.
-
-# Parallelization
-
-Use the following formula to calculate threads and memory requirements.
-
-- Run time of 1 file = 12 min, given 40 threads and 30 GB memory
-
-Parallelizing the pipeline for 6 files, yields:
-
-- Run time of 6 files = 12 min, given 6 x 40 threads and 6 x 30 GB memory 
-
-The default parallelization of the pipeline is 3. If you want to change that, modify file ```workflow/scripts/snakefile.sbatch```. For 6 files, you can change the default to: 
-
-```
-#!/bin/bash
-#SBATCH --job-name=smk_features
-#SBATCH --output=smk_features_%j.out
-#SBATCH --error=smk_features_%j.err
-#SBATCH --cpus-per-task=240
-#SBATCH --partition=standard
-#SBATCH --mem=180G
-
-module purge
-source /vast/groups/VEO/tools/anaconda3/etc/profile.d/conda.sh
-conda activate snakemake_v8.3.1
-
-snakemake --use-conda --conda-frontend conda --cores 6 --configfile config/config.json
-conda deactivate
-```
-
-If you are not using the draco cluster, adapt file ```workflow/scripts/snakefile.sbatch``` to your needs.
 
 # Available features
 
