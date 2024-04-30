@@ -56,7 +56,7 @@ ls genomes
 - Create ```config/files.txt``` with the list of the input files provided in the repository with the command line below:
 
 ```
-ls -1 genomes/ | sed 's/\.fasta//g' | grep -v '^$' > config/files.txt
+ls -1 genomes/*fasta | sed 's/\.fasta//g' | sed 's/genomes\///g' | grep -v '^$' > config/files.txt
 ```
 
 To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```: 
