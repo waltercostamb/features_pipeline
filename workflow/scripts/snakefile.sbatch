@@ -16,7 +16,7 @@ conda activate snakemake_v7.24.0
 
 #Run Snakemake
 #snakemake --use-conda --conda-frontend conda --cores 1 --configfile config/config.json
-snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple
+snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 50 --profile simple
 
 #Deactivate conda environment
 conda deactivate
