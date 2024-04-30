@@ -38,6 +38,12 @@ After cloning the repository, you need to download the database required by EggN
 - Download the database with ```download_eggnog_data.py``` following: https://github.com/eggnogdb/eggnog-mapper/wiki/eggNOG-mapper-v2.1.5-to-v2.1.12#setup This should download a DB of ~50 GB
 - Change file ```config/config.json``` to update parameter "emapper_db_dir". This parameter contains the path to the eggnog database. The default is ```/work/groups/VEO/databases/emapper/v20230620```
 
+## Dependencies
+
+If you are using this pipeline in the draco high-performance cluster and are part of the VEO group, skip this section.   
+
+To use this pipeline you should install Snakemake version 7. For this, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
+
 # Usage
 
 After cloning the repository, do the following steps:
@@ -59,13 +65,13 @@ ls genomes
 ls -1 genomes/*fasta | sed 's/\.fasta//g' | sed 's/genomes\///g' | grep -v '^$' > config/files.txt
 ```
 
-To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```, as below. ```snakemake.sbatch``` is a script that runs snakemake (see section [snakefile.sbatch](https://github.com/waltercostamb/features_pipeline/blob/main/config/config.json) for details).
+To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```, as below. ```snakemake.sbatch``` is a script that runs snakemake (see section [snakefile.sbatch](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#snakefilesbatch) for details).
 
 ```
 sbatch workflow/scripts/snakefile.sbatch
 ```
 
-If you are not using the draco cluster, you should adapt ```workflow/scripts/snakemake.sbatch``` to fit your cluster. Most importantly, change the conda activation command lines. For installation of snakemake, consult: https://snakemake.readthedocs.io/en/stable/getting_started/installation.html.
+If you are not using the draco cluster, you should adapt ```workflow/scripts/snakemake.sbatch``` to fit your cluster. Most importantly, change the conda activation command lines. 
 
 ## Expected output
 
@@ -114,7 +120,7 @@ UNDER CONSTRUCTION.
 
 ## snakefile.sbatch
 
-File ```workflow/scripts/snakefile.sbatch``` (see content below) contains information for the slurm cluster. If you submit this script to slurm, it will act as a *master* by sending small jobs to the queue corresponding to individual rules of the pipeline. The line ```snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple``` contains the parameters of the Snakemake pipeline. Parameter ```jobs 3``` indicate how many jobs you want the *master* script to send to slurm at the same time. Parameter ```--profile simple``` indicates the folder containing the configurantion file for the cluster.  
+File ```workflow/scripts/snakefile.sbatch``` (see content below) is a script that runs the snakemake pipeline. It contains information for the slurm cluster. If you submit this script to slurm, it will act as a *master* by sending small jobs to the queue corresponding to individual rules of the pipeline. The line ```snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple``` contains parameters of Snakemake: ```jobs 3``` indicates how many jobs you want the *master* script to send to slurm at the same time; ```--profile simple``` indicates the folder containing the configuration file for the cluster.  
 
 ```
 #!/bin/bash
