@@ -1,6 +1,8 @@
 # Snakemake workflow: Features Pipeline
 
-A Snakemake workflow for extracting features from bacterial genomes, such as kmers and gene families. In this tutorial, you will learn how to use the pipeline with the example input provided in folder ```genomes```. After learning, you can use it with your own data. 
+This workflow extracts different genomic features from prokaryotic genomes. The input is a folder containing genomic FASTA files and the output are text files containing genomic features. Click on the [list of features](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#available-features) to see the available ones.  
+
+In this tutorial, you will learn how to use the pipeline with the example input provided in folder ```genomes```. After learning, you can use it with your own data. 
 
 <p align="center">
   <img src="./figures/features_pipeline.png" alt="Alt Text" width="550"/>
@@ -18,13 +20,12 @@ Within the pipeline the following software are used:
 
 ## Cloning the repository
 
-The first step to use the pipeline is to clone the GIT repository:
+The first step to use the pipeline is to clone and access the GIT repository:
 
 ```
 #Clone using https
 git clone https://github.com/waltercostamb/features_pipeline.git
 ```
-
 You could clone the repository using something else from https. To know what is the best option for you, consult your admin.
 
 ## Downloading databases
@@ -41,10 +42,21 @@ After cloning the repository, you need to download the database required by EggN
 
 After cloning the repository, do the following steps:
 
+```
+#Go to the newly created folder
+cd features_pipeline
+#See what is inside the folder
+ls
+#config figures README.md workflow genomes simple
+#See the example files
+ls genomes
+#1266999.fasta 743966.fasta GCA_900660695.fasta
+```
+
 - Create ```config/files.txt``` with the list of the input files provided in the repository with the command line below:
 
 ```
-ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > config/files.txt
+ls -1 genomes/ | sed 's/\.fasta//g' | grep -v '^$' > config/files.txt
 ```
 
 To use the pipeline with the example files, you can submit a job to the slurm queue with ```workflow/scripts/snakemake.sbatch```: 
