@@ -82,7 +82,7 @@ ls genomes/
 1266999.fasta  743966.fasta  GCA_900660695.fasta
 ```
 
-If you run the example input, you will obtain their [kmer profiles](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#kmers), eggNOG [gene families](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#gene-families), genome/contig/MAG quality reports from CheckM, [isoelectric points of proteins](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#isoelectric-points-of-proteins) and [identified prophages](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#prophages). For the example files, this is the directory tree of results:  
+If you run the example input, you will obtain their [kmer profiles](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#kmers), eggNOG [gene families](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#gene-families), genome/contig/MAG quality reports from CheckM, [isoelectric points of proteins](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#isoelectric-points-of-proteins) and [identified prophages](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#prophages). For the example files, the directory tree of results follows below. For specific outputs of each rule, consult section [Available features](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#available-features).  
 
 ```
 results
@@ -172,12 +172,16 @@ A directed acyclic graph (DAG) is shown for each feature. It describes the pipel
 
 ## Gene families
 
-Genes are first predicted with CheckM (which uses prodigal internally) from the input genomes. Afterwards, families are assigned with eggNOG emapper. Finally, an in-house script creates a table with gene families per file ID: 1 indicates the presence of that family in that file, while 0 indicates absence.
-Rules: genes_checkm and gene_families_emapper. 
+Genes are first predicted with CheckM (which uses prodigal internally) from the input genomes. Afterwards, families are assigned with eggNOG emapper. Finally, an in-house script creates a table with gene families per file ID: 1 indicates the presence of that family in that file, while 0 indicates absence. Rules: genes_checkm and gene_families_emapper.   
 
 ## kmers
 
-kmers are sub-sequences of a genome. Kmers have length k, which can be defined by the user. The default is 9. If you want a different k, change it in file config.json. Kmers are calculated with Gerbil. An in-house script creates a table with kmers per file ID. Rule: kmers.
+kmers are sub-sequences of a genome. Kmers have length k, which can be defined by the user. The default is 9. If you want a different k, change it in file config.json. Kmers are calculated with Gerbil. An in-house script creates a table with kmers per file ID. Rules: kmers_jellyfish and kmers_table.   
+
+Output:   
+
+- results/kmer_files/FILE_ID_kmer9.txt: FASTA files per input genomes with the kmer profile produced by Jellyfish   
+- results/kmer9_profiles.tsv: a single tsv file combining all profiles for genomes indicated in ```config/files.txt```
 
 ## GC content
 
