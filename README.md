@@ -82,7 +82,7 @@ ls genomes/
 1266999.fasta  743966.fasta  GCA_900660695.fasta
 ```
 
-If you run the example input, you will obtain their [kmer profiles](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#kmers), eggNOG [gene families](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#gene-families), genome/contig/MAG quality reports from CheckM, [isoelectric points of proteins](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#isoelectric-points-of-proteins) and [identified prophages](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#prophages). For the example files, the directory tree of results follows below. For specific outputs of each rule, consult section [Available features](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#available-features).  
+If you run the example input, you will obtain their [kmer profiles](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#kmers), eggNOG [gene families](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#gene-families), genome/contig/MAG quality reports from CheckM, [isoelectric points of proteins](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#isoelectric-points-of-proteins) and [identified prophages](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#prophages). For the example files, the folder tree of results follows below. For specific outputs of each rule, consult section [Available features](https://github.com/waltercostamb/features_pipeline/tree/main?tab=readme-ov-file#available-features).  
 
 ```
 results
@@ -104,34 +104,42 @@ results
     └── tree
 ```
 
-## Use the pipeline with your data
+## Using the pipeline with your data
 
 To use the pipeline with your own data:
 
-- Make sure the directory which contains your bacterial genomes (or contigs) is named ```genomes``` (in lowercase)
-- Make sure the FASTA files have the extension ```.fasta```
-  - the pipeline assumes your files are named in the following way: ```FILE\_ID.fasta```
-- Create ```config/files.txt``` containing the FILE\_IDs you want to run through the pipeline:
+- Save your genome files into a folder
+
+The default folder name is ```genomes```. If you change the name, make sure to update the following line of ```config/config.json``` with the current name: 
+
+```   "input_folder": "CURRENT_NAME",```
+
+- Make sure the genome files have the extension ```.fasta```, otherwise the pipeline will not find your genomes
+- Create file ```config/files.txt``` containing the genome names:
 
 ```
-ls -lh genomes/ | sed 's/  */\t/g' | cut -f9 | sed 's/\.fasta//g' | grep -v '^$' > config/files.txt
+ls -1 genomes/*fasta | sed 's/\.fasta//g' | sed 's/genomes\///g' | grep -v '^$' > config/files.txt
 ```
 
-- Adapt (if needed) the config and/or sbatch files:
+- If you wish to change any default configuration or variable, adapt the config and/or sbatch files:
 
 ```
 #Adapt files if needed
 vim config/config.json
+vim simple/config.yaml
 vim workflow/scripts/snakefile.sbatch
 ```
 
-## Config.json
-
-UNDER CONSTRUCTION.
-
 ## snakefile.sbatch
 
-File ```workflow/scripts/snakefile.sbatch``` (see content below) is a script that runs the snakemake pipeline. It contains information for the slurm cluster. If you submit this script to slurm, it will act as a *master* by sending small jobs to the queue corresponding to individual rules of the pipeline. The line ```snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple``` contains parameters of Snakemake: ```jobs 50``` indicates how many jobs you want the *master* script to send to slurm at the same time; ```--profile simple``` indicates the folder containing the configuration file for the cluster.  
+File ```workflow/scripts/snakefile.sbatch``` (see content below) is a script that runs the snakemake pipeline. It contains information for the slurm cluster. If you submit this script to slurm, it will act as a *master* by sending small jobs to the queue corresponding to individual rules of the pipeline. The line below contains parameters of Snakemake: ```jobs 50``` indicates how many jobs the *master* script will send to slurm at the same time; ```--profile simple``` indicates the folder containing the configuration file for the cluster.  
+
+```
+#Command line to run the snakemake pipeline
+snakemake --use-conda --conda-frontend conda --configfile config/config.json --jobs 3 --profile simple``` 
+```
+
+Content of ```workflow/scripts/snakefile.sbatch```:
 
 ```
 #!/bin/bash
@@ -160,7 +168,57 @@ conda deactivate
 
 ## Choosing specific rules
 
-The default mode of Snakefile is to run all rules. If you want to run one or only a few specific rules, change the commented lines in `rule all` of the Snakefile.
+The default mode of Snakefile is to run all rules. If you want to run only one or a few specific rules, change the commented lines in `rule all` of the Snakefile.  
+
+The default of rule all follows below. In this case all rules are active.
+
+```
+rule all:
+	input: 
+		#kmers_jellyfish
+		#expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
+		#kmers_table
+		expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
+		#genes_checkm_lineage
+		#expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features),
+		#genes_checkm_qa
+		expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
+		#gene_families_emapper
+		#expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
+		#gene_families_table
+		expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
+		#isoelectric_point
+		#expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
+		#isoelectric_point_table
+		expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features),
+		#prophages_jaeger
+		expand("{output_features}/prophages_jaeger/{id}_default_jaeger.tsv", output_features=output_features, id=genomeID_lst)
+```
+
+As an example, say you only want to run Jellyfish to generate kmer counts, without creating any table. In this case, comment all lines and uncomment the line below "kmers_jellyfish". It should look like:
+
+```
+rule all:
+	input: 
+		#kmers_jellyfish
+		expand("{output_features}/kmer_files/{id}_kmer{K}.txt", id=genomeID_lst, K=K, output_features=output_features),
+		#kmers_table
+		#expand("{output_features}/kmer{K}_profiles.tsv", output_features=output_features, K=K),
+		#genes_checkm_lineage
+		#expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features),
+		#genes_checkm_qa
+		#expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
+		#gene_families_emapper
+		#expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
+		#gene_families_table
+		#expand("{output_features}/gene-family_profiles.csv", output_features=output_features),
+		#isoelectric_point
+		#expand("{output_features}/isoelectric_point_files/{id}-iso_point.csv", id=genomeID_lst, output_features=output_features)
+		#isoelectric_point_table
+		#expand("{output_features}/iso-points_profiles_known_orthologs.csv", output_features=output_features),
+		#prophages_jaeger
+		#expand("{output_features}/prophages_jaeger/{id}_default_jaeger.tsv", output_features=output_features, id=genomeID_lst)
+```
 
 # Available features
 
