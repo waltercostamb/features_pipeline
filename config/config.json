@@ -1,6 +1,7 @@
 {
     "conda-frontend": "conda",
     "genomes": "config/files.txt",
+    "input_folder": "genomes",
     "K": 9,
     "threads_gerbil": 30,
     "threads_checkm": 30,
