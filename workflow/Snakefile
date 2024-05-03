@@ -93,11 +93,11 @@ rule genome_size:
 
 		#Get genome size in bases
 		genome_size=$(grep -v ">" {input.genome} | tr -d '\n' | wc -c)
-		echo "{wildcards.id} $genome_size" > tmp_{wildcards.id}
-		sed 's/  */\t/g' tmp_{wildcards.id} > {output.genome_sizes} 
+		echo "{wildcards.id} $genome_size" > {output_features}/genome_sizes/tmp_{wildcards.id}
+		sed 's/  */\t/g' {output_features}/genome_sizes/tmp_{wildcards.id} > {output.genome_sizes} 
 
 		#Remove tmp file
-		rm tmp_{wildcards.id}
+		rm {output_features}/genome_sizes/tmp_{wildcards.id}
 		"""
 
 #Rule to put all genome sizes into a unique table
