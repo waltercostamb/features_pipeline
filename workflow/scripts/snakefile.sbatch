@@ -4,7 +4,7 @@
 #SBATCH --error=smk_main_%j.err
 #SBATCH --cpus-per-task=1
 #SBATCH --hint=nomultithread
-#SBATCH --partition=gpu
+#SBATCH --partition=long
 #SBATCH --mem=1G
 
 #Unload any active module
