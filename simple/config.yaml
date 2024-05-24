@@ -9,13 +9,13 @@ cluster:
     --error=logs/{rule}/{rule}-{wildcards}-%j.err
     --hint=nomultithread
 default-resources:
-  - partition=gpu
+  - partition=standard
   - mem_mb=40000
 max-jobs-per-second: 10
 max-status-checks-per-second: 1
 local-cores: 1
 latency-wait: 60
-jobs: 100
+jobs: 50
 keep-going: True
 rerun-incomplete: False
 printshellcmds: True

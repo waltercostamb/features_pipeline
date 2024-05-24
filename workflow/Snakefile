@@ -53,7 +53,7 @@ rule all:
 		#genes_checkm_lineage
 		#expand("{output_features}/bins/{id}/genes.faa", id=genomeID_lst, output_features=output_features),
 		#genes_checkm_qa
-		#expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
+		expand("{output_features}/bins/{id}/{id}-qa.txt", id=genomeID_lst, output_features=output_features),
 		#gene_families_emapper
 		#expand("{output_features}/proteins_emapper/{id}", id=genomeID_lst, output_features=output_features)
 		#gene_families_table
@@ -68,7 +68,7 @@ rule all:
 		#expand("{output_features}/genome_sizes/{id}_genome_size.txt", output_features=output_features, id=genomeID_lst)
 		#genome_size_table
 		expand("{output_features}/genome_sizes.csv", output_features=output_features)
-		#hmmscan_profile
+		#hmmscan_profile - ON DEVELOPMENT
         	#expand("{output_features}/hmm_scan/{id}-tbl.txt", id=genomeID_lst, output_features=output_features)
 
 #Rule to calculate genome sizes in nt
@@ -158,7 +158,8 @@ rule kmers_table:
 	params:
 		k=K
 	resources:
-		threads=1
+		threads=1,
+		mem_mb=224000
 	shell:
 		r"""
 		#Create list of files
@@ -358,6 +359,7 @@ rule prophages_jaeger:
         	Jaeger -i {input.genome} -o {params.output_dir} --batch 128
 		"""
 
+#ON DEVELOPMENT
 #Finding HMM families from Pfam database using hmmscan (HMMER)
 #Adapted from wrapper: https://snakemake-wrappers.readthedocs.io/en/stable/wrappers/hmmer/hmmscan.html
 #rule hmmscan_profile:
